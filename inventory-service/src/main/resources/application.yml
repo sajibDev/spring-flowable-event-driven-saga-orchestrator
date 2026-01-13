@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: inventory-service
+
+server:
+  port: 8082
+
+logging:
+  level:
+    com.saga.orchestrator.inventory: DEBUG

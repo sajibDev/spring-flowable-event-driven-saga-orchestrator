@@ -1,0 +1,15 @@
+.git
+.gitignore
+.gradle
+.idea
+*.iml
+build
+target
+*.log
+.DS_Store
+__MACOSX
+.vscode
+docs
+*.md
+.env
+load-test-results.json

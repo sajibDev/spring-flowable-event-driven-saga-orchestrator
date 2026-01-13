@@ -1,0 +1,13 @@
+dependencies {
+    implementation project(':common-events')
+    
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.flowable:flowable-spring-boot-starter:7.2.0'
+    implementation 'org.flowable:flowable-spring-boot-starter-rest:7.2.0'
+    implementation 'org.postgresql:postgresql'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
+}

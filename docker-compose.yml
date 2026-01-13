@@ -1,0 +1,230 @@
+
+
+services:
+  # PostgreSQL for Saga Orchestrator
+  saga-orchestrator-db:
+    image: postgres:17
+    container_name: saga-orchestrator-db
+    environment:
+      POSTGRES_DB: saga_orchestrator_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - saga_orchestrator_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Saga Orchestrator Service
+  saga-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: saga-orchestrator
+    container_name: saga-orchestrator
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://saga-orchestrator-db:5432/saga_orchestrator_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - "8080:8080"
+    depends_on:
+      - saga-orchestrator-db
+      - rabbitmq
+    networks:
+      - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Order Service
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: order-service
+    container_name: order-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://order-db:5432/order_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - "8081:8080"
+    depends_on:
+      - rabbitmq
+    networks:
+      - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Inventory Service
+  inventory-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: inventory-service
+    container_name: inventory-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://inventory-db:5432/inventory_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - "8082:8080"
+    depends_on:
+      - rabbitmq
+    networks:
+      - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    container_name: payment-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://payment-db:5432/payment_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - "8083:8080"
+    depends_on:
+      - rabbitmq
+    networks:
+      - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Shipping Service
+  shipping-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: shipping-service
+    container_name: shipping-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://shipping-db:5432/shipping_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - "8084:8080"
+    depends_on:
+      - rabbitmq
+    networks:
+      - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+volumes:
+  saga_orchestrator_data:
+  order_data:
+  inventory_data:
+  payment_data:
+  shipping_data:
+  rabbitmq_data:
+
+networks:
+  saga-network:
+    driver: bridge
