@@ -1,10 +1,6 @@
 package com.saga.orchestrator.order.config;
 
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_CANCEL_ROUTING_KEY;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_CANCELLED_ROUTING_KEY;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_CREATE_ROUTING_KEY;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_CREATED_ROUTING_KEY;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXCHANGE;
+import static com.saga.orchestrator.common.constants.RabbitMQConstants.*;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -22,7 +18,45 @@ public class RabbitMQConfig {
     public TopicExchange orderExchange() {
         return new TopicExchange(ORDER_EXCHANGE);
     }
-    
+
+    // Command Queues
+    @Bean
+    public Queue orderCreateCommandQueue() {
+        return new Queue(ORDER_CREATE_COMMAND_QUEUE, true);
+    }
+
+    @Bean
+    public Queue orderCancelCommandQueue() {
+        return new Queue(ORDER_CANCEL_COMMAND_QUEUE, true);
+    }
+
+    // Event Queues
+    @Bean
+    public Queue orderCreatedEventQueue() {
+        return new Queue(ORDER_CREATED_EVENT_QUEUE, true);
+    }
+
+    // Bindings
+    @Bean
+    public Binding orderCreateCommandBinding() {
+        return BindingBuilder.bind(orderCreateCommandQueue()).to(orderExchange()).with(ORDER_CREATE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding orderCancelCommandBinding() {
+        return BindingBuilder.bind(orderCancelCommandQueue()).to(orderExchange()).with(ORDER_CANCEL_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding orderCreatedEventBinding() {
+        return BindingBuilder.bind(orderCreatedEventQueue()).to(orderExchange()).with(ORDER_CREATED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding orderCancelledEventBinding() {
+        return BindingBuilder.bind(orderCreatedEventQueue()).to(orderExchange()).with(ORDER_CANCELLED_ROUTING_KEY);
+    }
+
     @Bean
     public MessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();

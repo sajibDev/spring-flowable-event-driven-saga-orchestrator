@@ -23,9 +23,9 @@ public class PaymentEventListener {
   }
 
   @RabbitListener(queues = RabbitMQConstants.PAYMENT_REFUND_COMMAND_QUEUE)
-  public void handlePaymentRefund(PaymentCompensationEvent paymentCompensationEvent) {
+  public void handlePaymentRefund(RefundPaymentCommand refundPaymentCommand) {
     log.info("Received payment refund request. CorrelationId: {}, OrderId: {}",
-        paymentCompensationEvent.getOrderId(), paymentCompensationEvent.getOrderId());
-    paymentService.refundPayment(paymentCompensationEvent);
+        refundPaymentCommand.getCorrelationId(), refundPaymentCommand.getOrderId());
+    paymentService.refundPayment(refundPaymentCommand);
   }
 }

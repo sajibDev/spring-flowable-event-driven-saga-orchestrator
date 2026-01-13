@@ -11,10 +11,9 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InventoryCompensatedEvent implements Serializable {
+public class CancelShipmentCommand implements Serializable {
     private String correlationId;
     private String orderId;
-    private String reservationId;
-    private boolean success;
-    private String message;
+    private String shipmentId;
 }
+

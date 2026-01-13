@@ -68,8 +68,10 @@ public class OrderService {
     }
 
     OrderCancelledEvent event = OrderCancelledEvent.builder()
+        .correlationId(cancelOrderCommand.getCorrelationId())
         .orderId(cancelOrderCommand.getOrderId())
         .reason(cancelOrderCommand.getReason())
+        .success(true)
         .build();
 
     rabbitTemplate.convertAndSend(

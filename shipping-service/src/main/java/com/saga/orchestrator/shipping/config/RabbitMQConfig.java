@@ -1,10 +1,6 @@
 package com.saga.orchestrator.shipping.config;
 
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXCHANGE;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.SHIPMENT_CREATED_EVENT_QUEUE;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.SHIPMENT_CREATED_ROUTING_KEY;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.SHIPPING_CREATE_COMMAND_QUEUE;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.SHIPPING_CREATE_ROUTING_KEY;
+import static com.saga.orchestrator.common.constants.RabbitMQConstants.*;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -28,7 +24,12 @@ public class RabbitMQConfig {
     public Queue shippingCreateCommandQueue() {
         return new Queue(SHIPPING_CREATE_COMMAND_QUEUE, true);
     }
-    
+
+    @Bean
+    public Queue shippingCancelCommandQueue() {
+        return new Queue(SHIPPING_CANCEL_COMMAND_QUEUE, true);
+    }
+
     // Event Queues (Saga Listeners)
     @Bean
     public Queue shipmentCreatedEventQueue() {
@@ -40,7 +41,12 @@ public class RabbitMQConfig {
     public Binding shippingCreateBinding() {
         return BindingBuilder.bind(shippingCreateCommandQueue()).to(orderExchange()).with(SHIPPING_CREATE_ROUTING_KEY);
     }
-    
+
+    @Bean
+    public Binding shippingCancelBinding() {
+        return BindingBuilder.bind(shippingCancelCommandQueue()).to(orderExchange()).with(SHIPPING_CANCEL_ROUTING_KEY);
+    }
+
     @Bean
     public Binding shipmentCreatedBinding() {
         return BindingBuilder.bind(shipmentCreatedEventQueue()).to(orderExchange()).with(SHIPMENT_CREATED_ROUTING_KEY);

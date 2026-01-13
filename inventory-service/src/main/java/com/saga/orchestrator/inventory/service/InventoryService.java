@@ -33,14 +33,14 @@ public class InventoryService {
       boolean allAvailable = true;
       StringBuilder failureMessage = new StringBuilder();
 
-      for (String productId : reserveInventoryCommand.getProductIdList()) {
-        boolean inventoryAvailable = checkInventoryAvailability(productId, reserveInventoryCommand.getQuantity());
-
-        if (!inventoryAvailable) {
-          allAvailable = false;
-          failureMessage.append("Insufficient inventory for product: ").append(productId).append("; ");
-        }
-      }
+//      for (String productId : reserveInventoryCommand.getProductIdList()) {
+//        boolean inventoryAvailable = checkInventoryAvailability(productId, reserveInventoryCommand.getQuantity());
+//
+//        if (!inventoryAvailable) {
+//          allAvailable = false;
+//          failureMessage.append("Insufficient inventory for product: ").append(productId).append("; ");
+//        }
+//      }
 
       if (!allAvailable) {
         log.warn("Insufficient inventory for some products: {}", failureMessage);
@@ -85,7 +85,11 @@ public class InventoryService {
     log.info("Inventory released for order: {}", compensateInventoryCommand.getCorrelationId());
 
     InventoryCompensatedEvent event = InventoryCompensatedEvent.builder()
+        .correlationId(compensateInventoryCommand.getCorrelationId())
         .orderId(compensateInventoryCommand.getOrderId())
+        .reservationId(compensateInventoryCommand.getReservationId())
+        .success(true)
+        .message("Inventory released successfully")
         .build();
 
     rabbitTemplate.convertAndSend(

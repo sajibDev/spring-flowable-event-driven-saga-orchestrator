@@ -12,6 +12,8 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderCancelledEvent implements Serializable {
+  private String correlationId;
   private String orderId;
   private String reason;
+  private boolean success;
 }
