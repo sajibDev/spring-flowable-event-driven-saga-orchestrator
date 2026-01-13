@@ -21,11 +21,4 @@ public class ShippingEventListener {
         createShipmentCommand.getCorrelationId(), createShipmentCommand.getOrderId());
     shippingService.createShipment(createShipmentCommand);
   }
-
-  @RabbitListener(queues = RabbitMQConstants.SHIPPING_CANCEL_COMMAND_QUEUE)
-  public void handleShippingCancel(CancelShipmentCommand cancelShipmentCommand) {
-    log.info("Received cancel shipping command. CorrelationId: {}, OrderId: {}",
-        cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());
-    shippingService.cancelShipment(cancelShipmentCommand);
-  }
 }
