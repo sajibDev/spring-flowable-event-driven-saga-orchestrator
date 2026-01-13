@@ -24,6 +24,98 @@ services:
           cpus: '0.5'
           memory: 512M
 
+  # PostgreSQL for Order Service
+  order-db:
+    image: postgres:17
+    container_name: order-db
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - order_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # PostgreSQL for Inventory Service
+  inventory-db:
+    image: postgres:17
+    container_name: inventory-db
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - inventory_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # PostgreSQL for Payment Service
+  payment-db:
+    image: postgres:17
+    container_name: payment-db
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # PostgreSQL for Shipping Service
+  shipping-db:
+    image: postgres:17
+    container_name: shipping-db
+    environment:
+      POSTGRES_DB: shipping_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - shipping_data:/var/lib/postgresql/data
+    networks:
+      - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
   # RabbitMQ
   rabbitmq:
     image: rabbitmq:3-management
@@ -102,6 +194,7 @@ services:
     ports:
       - "8081:8080"
     depends_on:
+      - order-db
       - rabbitmq
     networks:
       - saga-network
@@ -136,6 +229,7 @@ services:
     ports:
       - "8082:8080"
     depends_on:
+      - inventory-db
       - rabbitmq
     networks:
       - saga-network
@@ -170,6 +264,7 @@ services:
     ports:
       - "8083:8080"
     depends_on:
+      - payment-db
       - rabbitmq
     networks:
       - saga-network
@@ -204,6 +299,7 @@ services:
     ports:
       - "8084:8080"
     depends_on:
+      - shipping-db
       - rabbitmq
     networks:
       - saga-network
