@@ -33,14 +33,14 @@ public class InventoryService {
       boolean allAvailable = true;
       StringBuilder failureMessage = new StringBuilder();
 
-      for (String productId : reserveInventoryCommand.getProductIdList()) {
-        boolean inventoryAvailable = checkInventoryAvailability(productId, reserveInventoryCommand.getQuantity());
+      // for (String productId : reserveInventoryCommand.getProductIdList()) {
+      //   boolean inventoryAvailable = checkInventoryAvailability(productId, reserveInventoryCommand.getQuantity());
 
-        if (!inventoryAvailable) {
-          allAvailable = false;
-          failureMessage.append("Insufficient inventory for product: ").append(productId).append("; ");
-        }
-      }
+      //   if (!inventoryAvailable) {
+      //     allAvailable = false;
+      //     failureMessage.append("Insufficient inventory for product: ").append(productId).append("; ");
+      //   }
+      // }
 
       if (!allAvailable) {
         log.warn("Insufficient inventory for some products: {}", failureMessage);
