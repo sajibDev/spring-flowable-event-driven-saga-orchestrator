@@ -4,25 +4,27 @@ import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXC
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.PAYMENT_PROCESSED_ROUTING_KEY;
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.PAYMENT_REFUNDED_ROUTING_KEY;
 
-import java.util.UUID;
-
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.stereotype.Service;
-
-import com.saga.orchestrator.common.events.PaymentProcessedEvent;
-import com.saga.orchestrator.common.events.ProcessPaymentCommand;
-import com.saga.orchestrator.common.events.RefundPaymentCommand;
-
+import com.saga.orchestrator.common.events.*;
+import com.saga.orchestrator.payment.entity.PaymentTransaction;
+import com.saga.orchestrator.payment.entity.TransactionStatus;
+import com.saga.orchestrator.payment.repository.PaymentTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
 
+  private final PaymentTransactionRepository transactionRepository;
   private final RabbitTemplate rabbitTemplate;
 
+  @Transactional
   public void processPayment(ProcessPaymentCommand processPaymentCommand) {
     log.info("Started processing payment. CorrelationId: {}, OrderId: {}",
         processPaymentCommand.getCorrelationId(), processPaymentCommand.getOrderId());
@@ -40,12 +42,21 @@ public class PaymentService {
             processPaymentCommand.getCorrelationId(),
             transactionId,
             false,
-            "Payment gateway declined");
+            "Payment gateway declined"
+        );
 
         return;
       }
 
-      Thread.sleep(500);
+      PaymentTransaction transaction = PaymentTransaction.builder()
+          .transactionId(transactionId)
+          .orderId(processPaymentCommand.getOrderId())
+          .customerId(processPaymentCommand.getCustomerId())
+          .amount(processPaymentCommand.getAmount())
+          .status(TransactionStatus.PROCESSED)
+          .build();
+
+      transactionRepository.save(transaction);
 
       log.info("Payment processed successfully. CorrelationId: {}, OrderId: {}",
           processPaymentCommand.getCorrelationId(), processPaymentCommand.getOrderId());
@@ -54,7 +65,8 @@ public class PaymentService {
           processPaymentCommand.getCorrelationId(),
           transactionId,
           true,
-          "Payment processed successfully");
+          "Payment processed successfully"
+      );
     } catch (Exception e) {
       log.error("Error processing payment for order: {}", processPaymentCommand.getCorrelationId(),
           e);
@@ -63,19 +75,21 @@ public class PaymentService {
     }
   }
 
-  public void refundPayment(RefundPaymentCommand refundPaymentCommand) {
+  @Transactional
+  public void refundPayment(PaymentCompensationEvent paymentCompensationEvent) {
     log.info("Refunding payment. CorrelationId: {}, OrderId: {}",
-        refundPaymentCommand.getCorrelationId(), refundPaymentCommand.getOrderId());
+        paymentCompensationEvent.getOrderId(), paymentCompensationEvent.getOrderId());
 
-    try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      // Handle interruption
-    }
+    transactionRepository.findByOrderId(paymentCompensationEvent.getOrderId())
+        .ifPresent(transaction -> {
+          transaction.setStatus(TransactionStatus.REFUNDED);
+          transactionRepository.save(transaction);
+          log.info("Payment refunded for order: {}", paymentCompensationEvent.getOrderId());
+        });
 
     PaymentProcessedEvent paymentProcessedEvent = PaymentProcessedEvent.builder()
-        .correlationId(refundPaymentCommand.getCorrelationId())
-        .transactionId(refundPaymentCommand.getTransactionId())
+        .correlationId(paymentCompensationEvent.getOrderId())
+        .transactionId(null)
         .success(true)
         .message("Payment refunded successfully")
         .build();
@@ -83,7 +97,8 @@ public class PaymentService {
     rabbitTemplate.convertAndSend(
         ORDER_EXCHANGE,
         PAYMENT_REFUNDED_ROUTING_KEY,
-        paymentProcessedEvent);
+        paymentProcessedEvent
+    );
   }
 
   private boolean processPaymentGateway(String customerId, java.math.BigDecimal amount) {
@@ -94,7 +109,8 @@ public class PaymentService {
       String correlationId,
       String transactionId,
       boolean success,
-      String message) {
+      String message
+  ) {
     PaymentProcessedEvent paymentProcessedEvent = PaymentProcessedEvent.builder()
         .correlationId(correlationId)
         .transactionId(transactionId)
@@ -105,7 +121,8 @@ public class PaymentService {
     rabbitTemplate.convertAndSend(
         ORDER_EXCHANGE,
         PAYMENT_PROCESSED_ROUTING_KEY,
-        paymentProcessedEvent);
+        paymentProcessedEvent
+    );
 
     log.info("Successfully published payment processed event. CorrelationId: {}, Success: {}",
         correlationId,

@@ -22,10 +22,10 @@ public class PaymentEventListener {
     paymentService.processPayment(processPaymentCommand);
   }
 
-  @RabbitListener(queues = RabbitMQConstants.PAYMENT_REFUND_COMMAND_QUEUE)
-  public void handlePaymentRefund(RefundPaymentCommand refundPaymentCommand) {
+ @RabbitListener(queues = RabbitMQConstants.PAYMENT_REFUND_COMMAND_QUEUE)
+  public void handlePaymentRefund(PaymentCompensationEvent paymentCompensationEvent) {
     log.info("Received payment refund request. CorrelationId: {}, OrderId: {}",
-        refundPaymentCommand.getCorrelationId(), refundPaymentCommand.getOrderId());
-    paymentService.refundPayment(refundPaymentCommand);
+        paymentCompensationEvent.getOrderId(), paymentCompensationEvent.getOrderId());
+    paymentService.refundPayment(paymentCompensationEvent);
   }
 }
