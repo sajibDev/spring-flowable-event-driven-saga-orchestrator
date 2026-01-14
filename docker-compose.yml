@@ -14,6 +14,14 @@ services:
       retries: 5
     networks:
       - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1GB
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -30,6 +38,14 @@ services:
       retries: 5
     networks:
       - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1GB
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   temporal:
     image: temporalio/auto-setup:1.24.2
@@ -52,6 +68,14 @@ services:
       start_period: 60s
     networks:
       - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
+          cpus: '1.0'
+          memory: 512M
 
   temporal-ui:
 
@@ -67,79 +91,146 @@ services:
       - TEMPORAL_CORS_ORIGINS=http://localhost:8233
     networks:
       - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1GB
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
+  # Order Service
   order-service:
     build:
       context: .
-      dockerfile: order-service/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: order-service
+    container_name: order-service
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
     ports:
       - "8081:8081"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
+      - rabbitmq
     networks:
       - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
+          cpus: '1.0'
+          memory: 512M
 
-  payment-service:
-    build:
-      context: .
-      dockerfile: payment-service/Dockerfile
-    ports:
-      - "8082:8082"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
-    networks:
-      - saga-network
-
+  # Inventory Service
   inventory-service:
     build:
       context: .
-      dockerfile: inventory-service/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: inventory-service
+    container_name: inventory-service
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - "8082:8082"
+    depends_on:
+      - rabbitmq
+    networks:
+      - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    container_name: payment-service
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
     ports:
       - "8083:8083"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
+      - rabbitmq
     networks:
       - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
+          cpus: '1.0'
+          memory: 512M
 
+  # Shipping Service
   shipping-service:
     build:
       context: .
-      dockerfile: shipping-service/Dockerfile
-    ports:
-      - "8084:8084"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: shipping-service
+    container_name: shipping-service
     environment:
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - "8084:8084"
+    depends_on:
+      - rabbitmq
     networks:
       - saga-network
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
+          cpus: '1.0'
+          memory: 512M
 
   saga-orchestrator:
     build:
       context: .
-      dockerfile: saga-orchestrator/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: saga-orchestrator
+    container_name: saga-orchestrator
     ports:
       - "8085:8085"
     depends_on:
@@ -156,6 +247,14 @@ services:
     restart: on-failure
     networks:
       - saga-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
+          cpus: '1.0'
+          memory: 512M
 
 networks:
   saga-network:

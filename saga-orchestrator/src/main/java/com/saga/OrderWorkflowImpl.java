@@ -2,6 +2,7 @@ package com.saga;
 
 import com.saga.activities.OrderActivities;
 import com.saga.config.WorkflowOptionsConfig;
+import com.saga.dto.CreateOrderRequest;
 import com.saga.exceptions.InventoryFailedException;
 import com.saga.exceptions.OrderFailedException;
 import com.saga.exceptions.PaymentFailedException;
@@ -55,7 +56,7 @@ public class OrderWorkflowImpl implements OrderWorkflow {
     private final OrderWorkflowState state = new OrderWorkflowState();
 
     @Override
-    public void placeOrder(String orderId) {
+    public void placeOrder(String orderId, CreateOrderRequest orderRequest) {
         logger.info("Starting order workflow for order: {}", orderId);
         state.setOrderId(orderId);
         state.setStatus(OrderStatus.PROCESSING);

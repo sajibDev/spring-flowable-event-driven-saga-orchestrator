@@ -1,5 +1,6 @@
 package com.saga;
 
+import com.saga.dto.CreateOrderRequest;
 import com.saga.model.OrderWorkflowState;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
@@ -24,7 +25,7 @@ public interface OrderWorkflow {
      * @param orderId The unique order identifier
      */
     @WorkflowMethod
-    void placeOrder(String orderId);
+    void placeOrder(String orderId, CreateOrderRequest orderRequest);
 
     // Signal methods for external events from services
 

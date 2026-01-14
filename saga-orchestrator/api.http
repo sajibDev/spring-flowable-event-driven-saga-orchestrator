@@ -1,4 +1,25 @@
 
 ### Send POST request with json body
-POST http://localhost:8085/api/order-workflow/start
+POST http://localhost:8085/api/orders
 Content-Type: application/json
+
+{
+  "customerId": "12345",
+  "items": [],
+  "shippingAddress": "123 Main St, Anytown, USA"
+}
+
+###
+POST http://localhost:8085/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "123",
+  "items": [
+    {
+      "productId": "98765",
+      "quantity": 2
+    }
+  ],
+  "shippingAddress": "456 Elm St, Othertown, USA"
+}
