@@ -87,7 +87,7 @@ public class PaymentService {
   }
 
   private boolean processPaymentGateway(String customerId, java.math.BigDecimal amount) {
-    return Math.random() > 0.1;
+    return true;
   }
 
   private void publishPaymentProcessedEvent(

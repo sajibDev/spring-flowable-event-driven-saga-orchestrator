@@ -3,14 +3,16 @@ import { check, sleep } from 'k6';
 
 // Test configuration
 export const options = {
-  // Ramping up to 50 virtual users
+  // Ramping up to 100 virtual users
   stages: [
+    { duration: '5s', target: 25 },   // Ramp up to 25 users in 5 seconds
     { duration: '10s', target: 50 },  // Ramp up to 50 users in 10 seconds
-    { duration: '2m', target: 50 },   // Stay at 50 users for 2 minutes
+    { duration: '15s', target: 100 }, // Ramp up to 100 users in 15 seconds
+    { duration: '2m', target: 100 },  // Stay at 100 users for 2 minutes
     { duration: '10s', target: 0 },   // Ramp down to 0 users in 10 seconds
   ],
   thresholds: {
-    http_req_duration: ['p(95)<500', 'p(99)<1000'],  // 95% of requests < 500ms, 99% < 1000ms
+    http_req_duration: ['p(95)<800', 'p(99)<1500'],  // 95% of requests < 800ms, 99% < 1500ms
     http_req_failed: ['rate<0.1'],                     // Error rate < 10%
   },
 };

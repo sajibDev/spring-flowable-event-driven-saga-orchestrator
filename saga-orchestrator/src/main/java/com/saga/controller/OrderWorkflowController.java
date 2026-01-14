@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 @RestController
 public class OrderWorkflowController {
@@ -37,7 +38,7 @@ public class OrderWorkflowController {
         System.out.println("Starting workflow for order: ");
         Random random = new Random();
 
-        String workflowId = "workflow-" + random.nextInt(100000);
+        String workflowId = UUID.randomUUID().toString();
         try {
             OrderWorkflow workflow = workflowClient.newWorkflowStub(
                     OrderWorkflow.class,

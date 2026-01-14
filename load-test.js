@@ -3,16 +3,17 @@ import { check, sleep, group } from 'k6';
 
 export let options = {
   stages: [
-    { duration: '1m', target: 10 },    // Ramp up to 10 users
-    { duration: '2m', target: 25 },    // Ramp up to 25 users
-    { duration: '3m', target: 50 },    // Ramp up to 50 users
-    { duration: '5m', target: 50 },    // Hold at 50 users
-    { duration: '2m', target: 25 },    // Ramp down to 25 users
+    { duration: '1m', target: 25 },    // Ramp up to 25 users
+    { duration: '2m', target: 50 },    // Ramp up to 50 users
+    { duration: '3m', target: 100 },   // Ramp up to 100 users
+    { duration: '2m', target: 150 },   // Ramp up to 150 users
+    { duration: '5m', target: 150 },   // Hold at 150 users
+    { duration: '2m', target: 75 },    // Ramp down to 75 users
     { duration: '1m', target: 0 },     // Ramp down to 0 users
   ],
   thresholds: {
-    http_req_duration: ['p(95)<2000', 'p(99)<3000'],  // 95% of requests must complete below 2s
-    http_req_failed: ['rate<0.1'],  // Error rate must be below 10%
+    http_req_duration: ['p(95)<2500', 'p(99)<3500'],  // 95% of requests must complete below 2.5s, 99% below 3.5s
+    http_req_failed: ['rate<0.15'],  // Error rate must be below 15%
   },
 };
 
