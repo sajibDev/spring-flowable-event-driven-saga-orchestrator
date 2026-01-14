@@ -3,8 +3,8 @@ import { check, sleep } from 'k6';
 
 // Quick smoke test - 1 user, 5 orders, ~1 minute
 export const options = {
-  vus: 1,
-  iterations: 5,
+  vus: 5,
+  iterations: 1000,
   duration: '1m',
   thresholds: {
     http_req_duration: ['p(95)<2000'],

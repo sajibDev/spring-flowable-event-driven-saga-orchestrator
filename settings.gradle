@@ -6,3 +6,5 @@ include 'payment-service'
 include 'inventory-service'
 include 'shipping-service'
 include 'common-events'
+// Note: gatling-tests is a standalone module with its own build.gradle
+// Run it separately with: cd gatling-tests && ./gradlew gatlingRun
