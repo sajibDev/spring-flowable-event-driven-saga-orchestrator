@@ -18,8 +18,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1.0'
+          memory: 1GB
         reservations:
           cpus: '0.5'
           memory: 512M
@@ -41,8 +41,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1.0'
+          memory: 1GB
         reservations:
           cpus: '0.5'
           memory: 512M
@@ -75,11 +75,11 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
           cpus: '1.0'
           memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
 
   # Order Service
   order-service:
@@ -90,9 +90,6 @@ services:
         SERVICE_NAME: order-service
     container_name: order-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://order-db:5432/order_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
@@ -107,13 +104,13 @@ services:
       - saga-network
     restart: on-failure
     deploy:
-      resources:
+     resources:
         limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
           cpus: '1.0'
           memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
 
   # Inventory Service
   inventory-service:
@@ -124,9 +121,6 @@ services:
         SERVICE_NAME: inventory-service
     container_name: inventory-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://inventory-db:5432/inventory_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
@@ -141,13 +135,13 @@ services:
       - saga-network
     restart: on-failure
     deploy:
-      resources:
+       resources:
         limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
           cpus: '1.0'
           memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
 
   # Payment Service
   payment-service:
@@ -158,9 +152,6 @@ services:
         SERVICE_NAME: payment-service
     container_name: payment-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://payment-db:5432/payment_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
@@ -175,13 +166,13 @@ services:
       - saga-network
     restart: on-failure
     deploy:
-      resources:
+       resources:
         limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
           cpus: '1.0'
           memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
 
   # Shipping Service
   shipping-service:
@@ -192,9 +183,6 @@ services:
         SERVICE_NAME: shipping-service
     container_name: shipping-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://shipping-db:5432/shipping_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
@@ -209,20 +197,16 @@ services:
       - saga-network
     restart: on-failure
     deploy:
-      resources:
+       resources:
         limits:
+          cpus: '2.0'
+          memory: 1GB
+        reservations:
           cpus: '1.0'
           memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
 
 volumes:
   saga_orchestrator_data:
-  order_data:
-  inventory_data:
-  payment_data:
-  shipping_data:
   rabbitmq_data:
 
 networks:
