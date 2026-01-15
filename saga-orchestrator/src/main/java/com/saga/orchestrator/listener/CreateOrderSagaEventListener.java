@@ -2,6 +2,7 @@ package com.saga.orchestrator.listener;
 
 import com.saga.orchestrator.common.constants.RabbitMQConstants;
 import com.saga.orchestrator.common.events.*;
+import com.saga.orchestrator.tracking.SagaTimingTracker;
 import com.saga.orchestrator.util.constant.AppConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,15 @@ import java.util.stream.Collectors;
 public class CreateOrderSagaEventListener {
 
   private final RuntimeService runtimeService;
+  private final SagaTimingTracker sagaTimingTracker;
 
   @RabbitListener(queues = RabbitMQConstants.ORDER_CREATED_EVENT_QUEUE)
   public void handleOrderCreated(OrderCreatedEvent orderCreatedEvent) {
-    log.info("Received order created event from Order service. CorrelationId: {}, IsSuccess: {}",
-        orderCreatedEvent.getCorrelationId(), orderCreatedEvent.isSuccess());
+    log.info("Received order created event from Order service. CorrelationId: {}, IsSuccess: {}, timestamp: {}",
+        orderCreatedEvent.getCorrelationId(), orderCreatedEvent.isSuccess(), System.currentTimeMillis());
+
+    // Track intermediate event
+    sagaTimingTracker.recordSagaEvent(orderCreatedEvent.getCorrelationId(), "ORDER_CREATED", orderCreatedEvent.isSuccess());
 
     if (orderCreatedEvent.isSuccess()) {
       setMessageEventToResumeOrchestration(orderCreatedEvent.getCorrelationId(),
@@ -42,8 +47,11 @@ public class CreateOrderSagaEventListener {
   @RabbitListener(queues = RabbitMQConstants.INVENTORY_RESERVED_EVENT_QUEUE)
   public void handleInventoryReserved(InventoryReservedEvent event) {
     log.info(
-        "Received inventory reserved event from Inventory service. CorrelationId: {}, IsSuccess: {}",
-        event.getCorrelationId(), event.isSuccess());
+        "Received inventory reserved event from Inventory service. CorrelationId: {}, IsSuccess: {}, timestamp: {}",
+        event.getCorrelationId(), event.isSuccess(), System.currentTimeMillis());
+
+    // Track intermediate event
+    sagaTimingTracker.recordSagaEvent(event.getCorrelationId(), "INVENTORY_RESERVED", event.isSuccess());
 
     if (event.isSuccess()) {
       setMessageEventToResumeOrchestration(event.getCorrelationId(),
@@ -59,8 +67,11 @@ public class CreateOrderSagaEventListener {
   @RabbitListener(queues = RabbitMQConstants.PAYMENT_PROCESSED_EVENT_QUEUE)
   public void handlePaymentProcessed(PaymentProcessedEvent event) {
     log.info(
-        "Received payment processed event from Payment service. CorrelationId: {}, IsSuccess: {}",
-        event.getCorrelationId(), event.isSuccess());
+        "Received payment processed event from Payment service. CorrelationId: {}, IsSuccess: {}, timestamp: {}",
+        event.getCorrelationId(), event.isSuccess(), System.currentTimeMillis());
+
+    // Track intermediate event
+    sagaTimingTracker.recordSagaEvent(event.getCorrelationId(), "PAYMENT_PROCESSED", event.isSuccess());
 
     if (event.isSuccess()) {
       setMessageEventToResumeOrchestration(event.getCorrelationId(),
@@ -76,8 +87,11 @@ public class CreateOrderSagaEventListener {
   @RabbitListener(queues = RabbitMQConstants.SHIPMENT_CREATED_EVENT_QUEUE)
   public void handleShipmentCreated(ShipmentCreatedEvent event) {
     log.info(
-        "Received shipment created event from Shipping service. CorrelationId: {}, IsSuccess: {}",
-        event.getCorrelationId(), event.isSuccess());
+        "Received shipment created event from Shipping service. CorrelationId: {}, IsSuccess: {}, timestamp: {}",
+        event.getCorrelationId(), event.isSuccess(), System.currentTimeMillis());
+
+    // Record saga completion - this is the final step
+    sagaTimingTracker.recordSagaCompletion(event.getCorrelationId(), event.isSuccess());
 
     if (event.isSuccess()) {
       setMessageEventToResumeOrchestration(event.getCorrelationId(),

@@ -10,6 +10,7 @@ import static com.saga.orchestrator.util.constant.AppConstant.VAR_TOTAL_AMOUNT;
 import com.saga.orchestrator.common.events.CreateOrderCommand;
 import com.saga.orchestrator.dto.CreateOrderRequest;
 import com.saga.orchestrator.dto.OrderResponse;
+import com.saga.orchestrator.tracking.SagaTimingTracker;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class OrderSagaService {
 
   private final RuntimeService runtimeService;
+  private final SagaTimingTracker sagaTimingTracker;
 
   public OrderResponse initiateOrderSaga(CreateOrderRequest createOrderRequest) {
     String correlationId = UUID.randomUUID().toString();
@@ -52,8 +54,11 @@ public class OrderSagaService {
     );
 
     log.info(
-        "Order saga initiated successfully. CorrelationId: {}, ProcessInstanceId: {}, CustomerId: {}",
-        correlationId, processInstance.getId(), createOrderRequest.getCustomerId());
+        "Order saga initiated successfully. CorrelationId: {}, ProcessInstanceId: {}, CustomerId: {} ,timestamp: {}",
+        correlationId, processInstance.getId(), createOrderRequest.getCustomerId(), System.currentTimeMillis());
+
+    // Record saga start time for timing tracking
+    sagaTimingTracker.recordSagaStart(correlationId, createOrderRequest.getCustomerId());
 
     return OrderResponse.builder()
         .correlationId(correlationId)
