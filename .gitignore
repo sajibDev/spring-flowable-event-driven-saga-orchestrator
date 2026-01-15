@@ -38,3 +38,7 @@ out/
 ### Logs ###
 logs/
 *.log
+
+### sage timing logs ###
+saga-timing-logs/
+

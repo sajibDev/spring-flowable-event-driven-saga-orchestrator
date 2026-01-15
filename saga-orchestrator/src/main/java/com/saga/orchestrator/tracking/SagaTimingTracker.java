@@ -51,14 +51,20 @@ public class SagaTimingTracker {
     @PostConstruct
     public void init() {
         try {
-            Path logDir = Paths.get(LOG_DIR);
+            // Use absolute path from /app directory
+            Path logDir = Paths.get("/app", LOG_DIR);
+            log.info("Creating log directory: {}", logDir.toAbsolutePath());
+            
             if (!Files.exists(logDir)) {
                 Files.createDirectories(logDir);
+                log.info("Log directory created: {}", logDir.toAbsolutePath());
             }
             
             logFilePath = logDir.resolve(LOG_FILE);
             reportFilePath = logDir.resolve(REPORT_FILE);
             detailedReportFilePath = logDir.resolve(DETAILED_REPORT_FILE);
+            
+            log.info("Log file path will be: {}", logFilePath.toAbsolutePath());
             
             // Append mode for continuous logging
             logWriter = new PrintWriter(new BufferedWriter(new FileWriter(logFilePath.toFile(), true)), true);
@@ -66,10 +72,13 @@ public class SagaTimingTracker {
             logWriter.println("=".repeat(100));
             logWriter.println("SAGA TIMING TRACKER INITIALIZED - " + formatTimestamp(System.currentTimeMillis()));
             logWriter.println("=".repeat(100));
+            logWriter.flush();
             
-            log.info("SagaTimingTracker initialized. Log file: {}", logFilePath.toAbsolutePath());
+            log.info("SagaTimingTracker initialized successfully. Log file: {}", logFilePath.toAbsolutePath());
+            log.info("LogWriter created: {}", (logWriter != null));
         } catch (IOException e) {
-            log.error("Failed to initialize SagaTimingTracker log file", e);
+            log.error("Failed to initialize SagaTimingTracker log file at {}", logFilePath, e);
+            log.error("LogWriter will be null - file logging disabled!");
         }
     }
 
@@ -348,9 +357,25 @@ public class SagaTimingTracker {
     }
 
     private synchronized void writeToLog(String entry) {
-        if (logWriter != null) {
-            logWriter.println(entry);
-            logWriter.flush();
+        try {
+            // Check if file still exists, recreate if deleted
+            if (!Files.exists(logFilePath)) {
+                log.info("Log file was deleted, recreating: {}", logFilePath);
+                if (logWriter != null) {
+                    logWriter.close();
+                }
+                logWriter = new PrintWriter(new BufferedWriter(new FileWriter(logFilePath.toFile(), true)), true);
+                logWriter.println("=".repeat(100));
+                logWriter.println("LOG FILE RECREATED - " + formatTimestamp(System.currentTimeMillis()));
+                logWriter.println("=".repeat(100));
+            }
+            
+            if (logWriter != null) {
+                logWriter.println(entry);
+                logWriter.flush();
+            }
+        } catch (IOException e) {
+            log.error("Failed to write to saga timing log", e);
         }
     }
 

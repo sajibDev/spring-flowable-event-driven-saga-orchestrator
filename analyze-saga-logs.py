@@ -63,7 +63,8 @@ class SagaAnalyzer:
                 'endTime': None,
                 'duration': None,
                 'status': 'IN_PROGRESS',
-                'events': []
+                'events': [],
+                'hasFailedEvents': False
             }
     
     def _parse_event(self, line):
@@ -85,6 +86,9 @@ class SagaAnalyzer:
                     'success': success,
                     'elapsed': elapsed
                 })
+                # Track if any event failed
+                if not success:
+                    self.sagas[corr_id]['hasFailedEvents'] = True
     
     def _parse_complete(self, line):
         """Parse saga completion entry"""
@@ -115,8 +119,12 @@ class SagaAnalyzer:
         
         # Count statuses
         completed_sagas = [s for s in self.sagas.values() if s['status'] != 'IN_PROGRESS']
+        in_progress_sagas = [s for s in self.sagas.values() if s['status'] == 'IN_PROGRESS']
         success_count = len([s for s in completed_sagas if s['status'] == 'SUCCESS'])
         failed_count = len([s for s in completed_sagas if s['status'] == 'FAILED'])
+        # Count sagas with failed events (e.g., payment failures leading to compensation)
+        business_failures = len([s for s in completed_sagas if s.get('hasFailedEvents', False)])
+        in_progress_with_failures = len([s for s in in_progress_sagas if s.get('hasFailedEvents', False)])
         in_progress = total_sagas - len(completed_sagas)
         
         # Calculate duration statistics
@@ -134,8 +142,10 @@ class SagaAnalyzer:
         report.append(f"║  {'Total Sagas Tracked':<35} │ {total_sagas:>58} ║")
         report.append(f"║  {'Completed Sagas':<35} │ {len(completed_sagas):>58} ║")
         report.append(f"║  {'  - Successful':<35} │ {success_count:>50} ({(success_count*100/len(completed_sagas) if completed_sagas else 0):.1f}%) ║")
-        report.append(f"║  {'  - Failed':<35} │ {failed_count:>50} ({(failed_count*100/len(completed_sagas) if completed_sagas else 0):.1f}%) ║")
+        report.append(f"║  {'  - Failed (Orchestration)':<35} │ {failed_count:>50} ({(failed_count*100/len(completed_sagas) if completed_sagas else 0):.1f}%) ║")
+        report.append(f"║  {'  - Business Failures (Payment)':<35} │ {business_failures:>50} ({(business_failures*100/len(completed_sagas) if completed_sagas else 0):.1f}%) ║")
         report.append(f"║  {'In Progress':<35} │ {in_progress:>58} ║")
+        report.append(f"║  {'  - With Failed Events':<35} │ {in_progress_with_failures:>50} ({(in_progress_with_failures*100/in_progress if in_progress else 0):.1f}%) ║")
         report.append("╠" + "─" * 98 + "╣")
         report.append("")
         
@@ -254,12 +264,27 @@ def main():
     if not analyzer.parse_logs():
         return 1
     
+    # Prepare output directory
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Delete previous reports
+    summary_file = output_dir / "python-summary-report.txt"
+    detailed_file = output_dir / "python-detailed-report.txt"
+    json_file = output_dir / "saga-analysis.json"
+    
+    if summary_file.exists():
+        summary_file.unlink()
+    if detailed_file.exists():
+        detailed_file.unlink()
+    if json_file.exists():
+        json_file.unlink()
+    
     # Generate and display summary report
     summary = analyzer.generate_summary_report()
     print(summary)
     
     # Save summary to file
-    summary_file = Path(args.output_dir) / "python-summary-report.txt"
     with open(summary_file, 'w') as f:
         f.write(summary)
     print(f"\n✓ Summary saved to: {summary_file}")
@@ -269,14 +294,12 @@ def main():
         detailed = analyzer.generate_detailed_report(args.limit)
         print(detailed)
         
-        detailed_file = Path(args.output_dir) / "python-detailed-report.txt"
         with open(detailed_file, 'w') as f:
             f.write(detailed)
         print(f"\n✓ Detailed report saved to: {detailed_file}")
     
     # Export to JSON if requested
     if args.export_json:
-        json_file = Path(args.output_dir) / "saga-analysis.json"
         analyzer.export_to_json(json_file)
     
     return 0

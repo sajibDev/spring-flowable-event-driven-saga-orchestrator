@@ -9,6 +9,7 @@ import static com.saga.orchestrator.util.constant.AppConstant.VAR_ORDER_ID;
 import com.saga.orchestrator.common.constants.RabbitMQConstants;
 import com.saga.orchestrator.common.events.CancelOrderCommand;
 import com.saga.orchestrator.config.RabbitMQConfig;
+import com.saga.orchestrator.tracking.SagaTimingTracker;
 import com.saga.orchestrator.util.constant.AppConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Component;
 public class CancelOrderCommandDelegate implements JavaDelegate {
 
   private final RabbitTemplate rabbitTemplate;
+  private final SagaTimingTracker sagaTimingTracker;
 
   @Override
   public void execute(DelegateExecution execution) {
@@ -31,6 +33,9 @@ public class CancelOrderCommandDelegate implements JavaDelegate {
     String failureReason = (String) execution.getVariable(VAR_FAILURE_REASON);
 
     log.info("Sending CancelOrderCommand for order: {}, reason: {}", orderId, failureReason);
+
+    // Track order cancellation event
+    sagaTimingTracker.recordSagaEvent(correlationId, "ORDER_CANCELLED", true);
 
     CancelOrderCommand command = CancelOrderCommand.builder()
         .correlationId(correlationId)
@@ -45,5 +50,8 @@ public class CancelOrderCommandDelegate implements JavaDelegate {
     );
 
     log.info("CancelOrderCommand sent for orderId: {}", orderId);
+    
+    // Mark saga as completed with failure
+    sagaTimingTracker.recordSagaCompletion(correlationId, false);
   }
 }

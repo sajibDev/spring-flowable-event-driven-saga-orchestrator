@@ -8,7 +8,7 @@ export const options = {
         send_100_requests: {
             executor: 'shared-iterations',
             vus: 10,
-            iterations: 2000,
+            iterations: 1000,
             maxDuration: '60s',
         },
     },

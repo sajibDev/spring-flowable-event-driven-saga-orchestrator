@@ -7,6 +7,7 @@ import static com.saga.orchestrator.util.constant.AppConstant.VAR_ORDER_ID;
 import static com.saga.orchestrator.util.constant.AppConstant.VAR_RESERVATION_ID;
 
 import com.saga.orchestrator.common.events.CompensateInventoryCommand;
+import com.saga.orchestrator.tracking.SagaTimingTracker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flowable.engine.delegate.DelegateExecution;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 public class CompensateInventoryCommandDelegate implements JavaDelegate {
 
   private final RabbitTemplate rabbitTemplate;
+  private final SagaTimingTracker sagaTimingTracker;
 
   @Override
   public void execute(DelegateExecution execution) {
@@ -31,6 +33,9 @@ public class CompensateInventoryCommandDelegate implements JavaDelegate {
         "Compensate inventory flow triggered which means make payment has been failed. So starting "
             + "to send compensate inventory command to release inventory. After this step, the process will "
             + "continue to cancel the order. CorrelationId: {}", correlationId);
+
+    // Track compensation event
+    sagaTimingTracker.recordSagaEvent(correlationId, "INVENTORY_COMPENSATION", true);
 
     CompensateInventoryCommand command = CompensateInventoryCommand.builder()
         .correlationId(correlationId)

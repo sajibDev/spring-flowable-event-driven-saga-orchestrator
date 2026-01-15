@@ -16,14 +16,22 @@ echo ""
 
 # Step 1: Copy logs from Docker container
 echo "[1/2] Copying logs from container..."
-docker cp ${CONTAINER_NAME}:/app/saga-timing-logs ./saga-timing-logs
+
+# Remove old logs directory to avoid nesting
+if [ -d "saga-timing-logs" ]; then
+    rm -rf saga-timing-logs
+fi
+
+# Copy logs from container (copies the directory itself)
+docker cp ${CONTAINER_NAME}:/app/saga-timing-logs ./
+
 echo "✓ Logs copied to ./saga-timing-logs/"
 echo ""
 
-# Step 2: Generate Python report
+# Step 2: Generate Python analysis report
 echo "[2/2] Generating analysis report..."
 echo ""
-python3 analyze-saga-logs.py --detailed --limit 10
+python3 analyze-saga-logs.py --detailed --limit 50
 echo ""
 
 echo "=========================================="

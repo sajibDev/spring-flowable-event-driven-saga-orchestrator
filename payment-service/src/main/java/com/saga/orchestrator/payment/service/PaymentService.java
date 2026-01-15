@@ -87,7 +87,8 @@ public class PaymentService {
   }
 
   private boolean processPaymentGateway(String customerId, java.math.BigDecimal amount) {
-    return Math.random() > 0.1;
+    // 30% failure rate
+    return Math.random() > 0.3;
   }
 
   private void publishPaymentProcessedEvent(

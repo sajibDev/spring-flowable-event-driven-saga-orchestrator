@@ -28,6 +28,19 @@ public class ShippingService {
         try {
             String shipmentId = UUID.randomUUID().toString();
 
+            // Simulate 30% failure rate
+            if (Math.random() < 0.3) {
+                log.error("Shipment creation failed (simulated). CorrelationId: {}, OrderId: {}",
+                        createShipmentCommand.getCorrelationId(), createShipmentCommand.getOrderId());
+                
+                publishShipmentCreatedEvent(
+                        createShipmentCommand.getCorrelationId(),
+                        null,
+                        false,
+                        "Shipment service unavailable");
+                return;
+            }
+
             Thread.sleep(500);
 
             log.info("Shipment created successfully. CorrelationId: {}, OrderId: {}",
