@@ -233,6 +233,8 @@ services:
     container_name: saga-orchestrator
     ports:
       - "8085:8085"
+    volumes:
+      - ./logs/saga-orchestrator:/app/logs
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -244,6 +246,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
       - TEMPORAL_TARGET=temporal:7233
+      - LOG_PATH=/app/logs
     restart: on-failure
     networks:
       - saga-network

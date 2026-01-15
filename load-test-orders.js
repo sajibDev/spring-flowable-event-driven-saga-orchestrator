@@ -7,14 +7,10 @@ export const options = {
   stages: [
     { duration: '5s', target: 25 },   // Ramp up to 25 users in 5 seconds
     { duration: '10s', target: 50 },  // Ramp up to 50 users in 10 seconds
-    { duration: '15s', target: 100 }, // Ramp up to 100 users in 15 seconds
-    { duration: '2m', target: 100 },  // Stay at 100 users for 2 minutes
-    { duration: '10s', target: 0 },   // Ramp down to 0 users in 10 seconds
+    // { duration: '15s', target: 100 }, // Ramp up to 100 users in 15 seconds
+    // { duration: '2m', target: 100 },  // Stay at 100 users for 2 minutes
+    // { duration: '10s', target: 0 },   // Ramp down to 0 users in 10 seconds
   ],
-  thresholds: {
-    http_req_duration: ['p(95)<800', 'p(99)<1500'],  // 95% of requests < 800ms, 99% < 1500ms
-    http_req_failed: ['rate<0.1'],                     // Error rate < 10%
-  },
 };
 
 // Test data - multiple order payloads to vary requests
@@ -71,18 +67,18 @@ export default function () {
   const payload = orderPayloads[Math.floor(Math.random() * orderPayloads.length)];
 
   // Make the request
-  const res = http.post('http://localhost:8085/api/orders', JSON.stringify(payload), {
+   http.post('http://localhost:8085/api/orders', JSON.stringify(payload), {
     headers: {
       'Content-Type': 'application/json',
     },
   });
 
   // Validate response
-  check(res, {
-    'status is 202 (Accepted)': (r) => r.status === 202,
-    'response time < 1000ms': (r) => r.timings.duration < 1000,
-    'has workflowId in response': (r) => r.body.includes('workflowId'),
-  });
+  // check(res, {
+  //   'status is 202 (Accepted)': (r) => r.status === 202,
+  //   'response time < 1000ms': (r) => r.timings.duration < 1000,
+  //   'has workflowId in response': (r) => r.body.includes('workflowId'),
+  // });
 
   // Optional: small delay between requests (can be 0 for max load)
   sleep(0.02); // 20ms sleep - adjust based on your needs

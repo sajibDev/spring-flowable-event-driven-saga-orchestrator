@@ -31,8 +31,14 @@ FROM eclipse-temurin:21-jre-alpine
 ARG SERVICE_NAME
 WORKDIR /app
 
+# Create logs directory for workflow timestamps
+RUN mkdir -p /app/logs && chmod 755 /app/logs
+
 # Copy the built jar from builder
 COPY --from=builder /build/${SERVICE_NAME}/build/libs/${SERVICE_NAME}-1.0.0.jar app.jar
+
+# Declare volume for logs persistence
+VOLUME /app/logs
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

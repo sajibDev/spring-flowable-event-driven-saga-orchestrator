@@ -4,9 +4,11 @@ import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXC
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.PAYMENT_PROCESSED_ROUTING_KEY;
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.PAYMENT_REFUNDED_ROUTING_KEY;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.saga.orchestrator.common.events.PaymentProcessedEvent;
@@ -22,6 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentService {
 
   private final RabbitTemplate rabbitTemplate;
+  private final Random random = new Random();
+
+  // Failure rate: 10% (0.10) - configurable via application.yml
+  @Value("${payment.failure.rate:0.10}")
+  private double failureRate;
 
   public void processPayment(ProcessPaymentCommand processPaymentCommand) {
     log.info("Started processing payment. CorrelationId: {}, OrderId: {}",
@@ -29,6 +36,22 @@ public class PaymentService {
 
     try {
       String transactionId = UUID.randomUUID().toString();
+
+      // Simulate 10% failure rate for load testing
+      boolean shouldFail = random.nextDouble() < failureRate;
+
+      if (shouldFail) {
+        log.warn("Simulated payment failure. CorrelationId: {}, OrderId: {}",
+            processPaymentCommand.getCorrelationId(), processPaymentCommand.getOrderId());
+
+        publishPaymentProcessedEvent(
+            processPaymentCommand.getCorrelationId(),
+            transactionId,
+            false,
+            "Simulated payment failure for load testing");
+        return;
+      }
+
       boolean paymentSuccessful = processPaymentGateway(processPaymentCommand.getCustomerId(),
           processPaymentCommand.getAmount());
 

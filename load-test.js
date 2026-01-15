@@ -13,7 +13,8 @@ export let options = {
   ],
   thresholds: {
     http_req_duration: ['p(95)<2500', 'p(99)<3500'],  // 95% of requests must complete below 2.5s, 99% below 3.5s
-    http_req_failed: ['rate<0.15'],  // Error rate must be below 15%
+    // Adjusted for intentional 30% failure rate (20% shipping + 10% payment)
+    http_req_failed: ['rate<0.35'],  // Error rate must be below 35% (allowing some margin)
   },
 };
 

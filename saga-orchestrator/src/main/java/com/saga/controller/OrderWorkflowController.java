@@ -3,6 +3,7 @@ package com.saga.controller;
 import com.saga.OrderWorkflow;
 import com.saga.config.WorkflowOptionsConfig;
 import com.saga.dto.CreateOrderRequest;
+import com.saga.logging.WorkflowTimestampLogger;
 import io.temporal.api.common.v1.WorkflowExecution;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowExecutionAlreadyStarted;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 @RestController
@@ -32,14 +32,19 @@ public class OrderWorkflowController {
     @Autowired
     private WorkflowClient workflowClient;
 
+    @Autowired
+    private WorkflowTimestampLogger timestampLogger;
+
 
     @PostMapping("/api/orders")
     public ResponseEntity<Map<String, Object>> startOrderWorkflow(@RequestBody CreateOrderRequest createOrderRequest) {
         System.out.println("Starting workflow for order: ");
-        Random random = new Random();
 
         String workflowId = UUID.randomUUID().toString();
         try {
+            // Log workflow start timestamp
+            timestampLogger.logWorkflowStart(workflowId);
+
             OrderWorkflow workflow = workflowClient.newWorkflowStub(
                     OrderWorkflow.class,
                     WorkflowOptions.newBuilder()

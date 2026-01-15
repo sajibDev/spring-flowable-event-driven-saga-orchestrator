@@ -5,6 +5,7 @@ import com.saga.orchestrator.common.events.PaymentProcessedEvent;
 import com.saga.orchestrator.common.events.InventoryReservedEvent;
 import com.saga.orchestrator.common.events.ShipmentCreatedEvent;
 import com.saga.orchestrator.common.constants.RabbitMQConstants;
+import com.saga.logging.WorkflowTimestampLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -39,6 +40,9 @@ public class SagaEventListener {
     @Autowired
     private WorkflowClient workflowClient;
 
+    @Autowired
+    private WorkflowTimestampLogger timestampLogger;
+
     /**
      * Listens to order-events topic for ORDER_CREATED events to start workflows
      */
@@ -49,12 +53,13 @@ public class SagaEventListener {
         String workflowId = event.getCorrelationId();
 
         logger.info("Processing order event for order: {}, success: {}", workflowId, event.isSuccess());
+        timestampLogger.logOrderEventReceived(workflowId, event.isSuccess());
 
         try {
             if (event.isSuccess()) {
                 signalWorkflow(workflowId, OrderWorkflow::onOrderCreated, "Order completion");
             } else {
-                signalWorkflow(workflowId, OrderWorkflow::onOrderFailed, "Order failure");
+                timestampLogger.logOrderEventReceived(workflowId, false);
             }
         } catch (Exception e) {
             logger.error("Error processing Order event for order: {}", workflowId, e);
@@ -71,6 +76,7 @@ public class SagaEventListener {
         String workflowId = event.getCorrelationId();
 
         logger.info("Processing payment event for order: {}, success: {}", workflowId, event.isSuccess());
+        timestampLogger.logPaymentEventReceived(workflowId, event.isSuccess());
 
         try {
             if (event.isSuccess()) {
@@ -92,6 +98,7 @@ public class SagaEventListener {
         String workflowId = event.getCorrelationId();
 
         logger.info("Processing inventory event for order: {}, success: {}", workflowId, event.isSuccess());
+        timestampLogger.logInventoryEventReceived(workflowId, event.isSuccess());
 
         try {
             if (event.isSuccess()) {
@@ -113,6 +120,7 @@ public class SagaEventListener {
         String workflowId = event.getCorrelationId();
 
         logger.info("Processing shipping event for order: {}, success: {}", workflowId, event.isSuccess());
+        timestampLogger.logShippingEventReceived(workflowId, event.isSuccess());
 
         try {
             if (event.isSuccess()) {

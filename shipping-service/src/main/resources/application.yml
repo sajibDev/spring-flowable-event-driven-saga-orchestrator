@@ -14,3 +14,9 @@ server:
 logging:
   level:
     com.saga.orchestrator.shipping: DEBUG
+
+# Load testing configuration - 20% failure rate for shipping
+shipping:
+  failure:
+    rate: 0.20
+

@@ -14,3 +14,9 @@ server:
 logging:
   level:
     com.saga.orchestrator.payment: DEBUG
+
+# Load testing configuration - 10% failure rate for payment
+payment:
+  failure:
+    rate: 0.10
+

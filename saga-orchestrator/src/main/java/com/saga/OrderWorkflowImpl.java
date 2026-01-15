@@ -168,7 +168,8 @@ public class OrderWorkflowImpl implements OrderWorkflow {
             
             // Use Activity to publish shipping request
             activities.publishShippingRequest(orderId);
-            
+
+            saga.addCompensation(() -> compensationActivities.compensateShipping(orderId));
             // Wait for signal with timeout
             boolean shippingReceived = Workflow.await(
                 WorkflowOptionsConfig.SIGNAL_WAIT_TIMEOUT,

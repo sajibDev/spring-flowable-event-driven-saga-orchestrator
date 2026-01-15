@@ -71,7 +71,7 @@ public class OrderService {
         .correlationId(cancelOrderCommand.getCorrelationId())
         .orderId(cancelOrderCommand.getOrderId())
         .reason(cancelOrderCommand.getReason())
-        .success(true)
+        .success(false)
         .build();
 
     rabbitTemplate.convertAndSend(
