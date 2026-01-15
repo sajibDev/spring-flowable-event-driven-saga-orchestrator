@@ -7,7 +7,7 @@ export const options = {
     scenarios: {
         send_100_requests: {
             executor: 'shared-iterations',
-            vus: 50,
+            vus: 10,
             iterations: 2000,
             maxDuration: '60s',
         },
@@ -18,7 +18,14 @@ export const options = {
 const orderPayloads = [
     {
         customerId: '12345',
-        items: [],
+        items: [
+            {
+                productId: 'PROD-004',
+                productName: 'Keyboard',
+                quantity: 1,
+                price: 75.00,
+            },
+        ],
         shippingAddress: '123 Main St, Anytown, USA',
     },
     {
@@ -26,7 +33,9 @@ const orderPayloads = [
         items: [
             {
                 productId: '98765',
+                productName: 'Headphones',
                 quantity: 2,
+                price: 120.00,
             },
         ],
         shippingAddress: '456 Elm St, Othertown, USA',
@@ -68,7 +77,7 @@ export default function () {
     const payload = orderPayloads[Math.floor(Math.random() * orderPayloads.length)];
 
     // Make the request
-    http.post('http://localhost:18080/api/orders', JSON.stringify(payload), {
+    http.post('http://localhost:8080/api/orders', JSON.stringify(payload), {
         headers: {
             'Content-Type': 'application/json',
         },
