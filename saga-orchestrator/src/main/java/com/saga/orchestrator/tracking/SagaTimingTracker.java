@@ -439,4 +439,20 @@ public class SagaTimingTracker {
         public boolean isSuccess() { return success; }
         public long getElapsedFromStart() { return elapsedFromStart; }
     }
+
+    public void clearAllData() {
+        int activeCount = activeSagas.size();
+        int completedCount = completedSagas.size();
+        
+        activeSagas.clear();
+        completedSagas.clear();
+        
+        String logEntry = String.format(
+            "[CLEAR] All saga timing data cleared at %s | Cleared: %d active, %d completed sagas",
+            formatTimestamp(System.currentTimeMillis()), activeCount, completedCount
+        );
+        writeToLog(logEntry);
+        
+        log.info("Saga timing data cleared: {} active, {} completed sagas removed", activeCount, completedCount);
+    }
 }

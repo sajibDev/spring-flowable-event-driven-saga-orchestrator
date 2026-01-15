@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,5 +41,17 @@ public class SagaTimingController {
         stats.put("completedSagas", sagaTimingTracker.getCompletedSagaCount());
         stats.put("logFilePath", sagaTimingTracker.getLogFilePath());
         return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Clear all timing data.
+     */
+    @PostMapping(value = "/clear", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, String>> clearTimingData() {
+        sagaTimingTracker.clearAllData();
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "Timing data cleared");
+        return ResponseEntity.ok(response);
     }
 }
