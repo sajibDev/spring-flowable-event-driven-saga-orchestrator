@@ -4,8 +4,11 @@ spring:
   datasource:
     url: jdbc:postgresql://saga-orchestrator-db:5432/saga_orchestrator_db
     username: postgres
-    password: root
+    password: postgres
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
   jpa:
     hibernate:
       ddl-auto: update
