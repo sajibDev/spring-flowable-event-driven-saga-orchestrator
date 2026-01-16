@@ -4,14 +4,16 @@ import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXC
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.PAYMENT_PROCESSED_ROUTING_KEY;
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.PAYMENT_REFUNDED_ROUTING_KEY;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.saga.orchestrator.common.events.PaymentCompensationEvent;
 import com.saga.orchestrator.common.events.PaymentProcessedEvent;
 import com.saga.orchestrator.common.events.ProcessPaymentCommand;
+import com.saga.orchestrator.common.events.RefundPaymentCommand;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentService {
 
   private final RabbitTemplate rabbitTemplate;
+  private final Random random = new Random();
+
+  // Failure rate: 10% (0.10) - configurable via application.yml
+  @Value("${payment.failure.rate:0.10}")
+  private double failureRate;
 
   public void processPayment(ProcessPaymentCommand processPaymentCommand) {
     log.info("Started processing payment. CorrelationId: {}, OrderId: {}",
@@ -29,6 +36,22 @@ public class PaymentService {
 
     try {
       String transactionId = UUID.randomUUID().toString();
+
+      // Simulate 10% failure rate for load testing
+      boolean shouldFail = random.nextDouble() < failureRate;
+
+      if (shouldFail) {
+        log.warn("Simulated payment failure. CorrelationId: {}, OrderId: {}",
+            processPaymentCommand.getCorrelationId(), processPaymentCommand.getOrderId());
+
+        publishPaymentProcessedEvent(
+            processPaymentCommand.getCorrelationId(),
+            transactionId,
+            false,
+            "Simulated payment failure for load testing");
+        return;
+      }
+
       boolean paymentSuccessful = processPaymentGateway(processPaymentCommand.getCustomerId(),
           processPaymentCommand.getAmount());
 
@@ -63,9 +86,9 @@ public class PaymentService {
     }
   }
 
-  public void refundPayment(PaymentCompensationEvent paymentCompensationEvent) {
+  public void refundPayment(RefundPaymentCommand refundPaymentCommand) {
     log.info("Refunding payment. CorrelationId: {}, OrderId: {}",
-        paymentCompensationEvent.getOrderId(), paymentCompensationEvent.getOrderId());
+        refundPaymentCommand.getCorrelationId(), refundPaymentCommand.getOrderId());
 
     try {
       Thread.sleep(500);
@@ -74,8 +97,8 @@ public class PaymentService {
     }
 
     PaymentProcessedEvent paymentProcessedEvent = PaymentProcessedEvent.builder()
-        .correlationId(paymentCompensationEvent.getOrderId())
-        .transactionId(null)
+        .correlationId(refundPaymentCommand.getCorrelationId())
+        .transactionId(refundPaymentCommand.getTransactionId())
         .success(true)
         .message("Payment refunded successfully")
         .build();
@@ -87,8 +110,7 @@ public class PaymentService {
   }
 
   private boolean processPaymentGateway(String customerId, java.math.BigDecimal amount) {
-    // 30% failure rate
-    return Math.random() > 0.3;
+    return true;
   }
 
   private void publishPaymentProcessedEvent(
