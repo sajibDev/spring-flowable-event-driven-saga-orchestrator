@@ -10,7 +10,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.saga.orchestrator.common.events.CancelShipmentCommand;
 import com.saga.orchestrator.common.events.CreateShipmentCommand;
 import com.saga.orchestrator.common.events.ShipmentCreatedEvent;
 
@@ -71,19 +70,6 @@ public class ShippingService {
                     null,
                     false,
                     "Error creating shipment: " + e.getMessage());
-        }
-    }
-
-    public void cancelShipment(CancelShipmentCommand cancelShipmentCommand) {
-        log.info("Cancelling shipment. CorrelationId: {}, OrderId: {}",
-                cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());
-
-        try {
-            Thread.sleep(500);
-            log.info("Shipment cancelled successfully. CorrelationId: {}, OrderId: {}",
-                    cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());
-        } catch (InterruptedException e) {
-            // Handle interruption
         }
     }
 
