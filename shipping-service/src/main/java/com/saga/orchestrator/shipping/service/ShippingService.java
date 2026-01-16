@@ -3,11 +3,14 @@ package com.saga.orchestrator.shipping.service;
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXCHANGE;
 import static com.saga.orchestrator.common.constants.RabbitMQConstants.SHIPMENT_CREATED_ROUTING_KEY;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.saga.orchestrator.common.events.CancelShipmentCommand;
 import com.saga.orchestrator.common.events.CreateShipmentCommand;
 import com.saga.orchestrator.common.events.ShipmentCreatedEvent;
 
@@ -20,6 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 public class ShippingService {
 
     private final RabbitTemplate rabbitTemplate;
+    private final Random random = new Random();
+
+    // Failure rate: 20% (0.20) - configurable via application.yml
+    @Value("${shipping.failure.rate:0.20}")
+    private double failureRate;
 
     public void createShipment(CreateShipmentCommand createShipmentCommand) {
         log.info("Started creating shipment. CorrelationId: {}, OrderId: {}",
@@ -28,20 +36,22 @@ public class ShippingService {
         try {
             String shipmentId = UUID.randomUUID().toString();
 
-            // Simulate 30% failure rate
-            if (Math.random() < 0.3) {
-                log.error("Shipment creation failed (simulated). CorrelationId: {}, OrderId: {}",
+            Thread.sleep(500);
+
+            // Simulate 20% failure rate for load testing
+            boolean shouldFail = random.nextDouble() < failureRate;
+
+            if (shouldFail) {
+                log.warn("Simulated shipping failure. CorrelationId: {}, OrderId: {}",
                         createShipmentCommand.getCorrelationId(), createShipmentCommand.getOrderId());
-                
+
                 publishShipmentCreatedEvent(
                         createShipmentCommand.getCorrelationId(),
                         null,
                         false,
-                        "Shipment service unavailable");
+                        "Simulated shipping failure for load testing");
                 return;
             }
-
-            Thread.sleep(500);
 
             log.info("Shipment created successfully. CorrelationId: {}, OrderId: {}",
                     createShipmentCommand.getCorrelationId(), createShipmentCommand.getOrderId());
@@ -61,6 +71,19 @@ public class ShippingService {
                     null,
                     false,
                     "Error creating shipment: " + e.getMessage());
+        }
+    }
+
+    public void cancelShipment(CancelShipmentCommand cancelShipmentCommand) {
+        log.info("Cancelling shipment. CorrelationId: {}, OrderId: {}",
+                cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());
+
+        try {
+            Thread.sleep(500);
+            log.info("Shipment cancelled successfully. CorrelationId: {}, OrderId: {}",
+                    cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());
+        } catch (InterruptedException e) {
+            // Handle interruption
         }
     }
 
