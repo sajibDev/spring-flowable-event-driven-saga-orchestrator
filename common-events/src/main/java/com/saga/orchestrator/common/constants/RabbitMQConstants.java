@@ -12,6 +12,8 @@ public class RabbitMQConstants {
     public static final String PAYMENT_PROCESS_COMMAND_QUEUE = "payment.process.command.queue";
     public static final String PAYMENT_REFUND_COMMAND_QUEUE = "payment.refund.command.queue";
     public static final String SHIPPING_CREATE_COMMAND_QUEUE = "shipping.create.command.queue";
+    public static final String SHIPPING_CANCEL_COMMAND_QUEUE = "shipping.cancel.command.queue";
+
     
     // Queue names for events (saga responses)
     public static final String ORDER_CREATED_EVENT_QUEUE = "order.created.event.queue";
