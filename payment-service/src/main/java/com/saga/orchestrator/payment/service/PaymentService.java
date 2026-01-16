@@ -11,9 +11,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.saga.orchestrator.common.events.PaymentCompensationEvent;
 import com.saga.orchestrator.common.events.PaymentProcessedEvent;
 import com.saga.orchestrator.common.events.ProcessPaymentCommand;
-import com.saga.orchestrator.common.events.RefundPaymentCommand;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,9 +86,9 @@ public class PaymentService {
     }
   }
 
-  public void refundPayment(RefundPaymentCommand refundPaymentCommand) {
+  public void refundPayment(PaymentCompensationEvent paymentCompensationEvent) {
     log.info("Refunding payment. CorrelationId: {}, OrderId: {}",
-        refundPaymentCommand.getCorrelationId(), refundPaymentCommand.getOrderId());
+        paymentCompensationEvent.getOrderId(), paymentCompensationEvent.getOrderId());
 
     try {
       Thread.sleep(500);
@@ -97,8 +97,8 @@ public class PaymentService {
     }
 
     PaymentProcessedEvent paymentProcessedEvent = PaymentProcessedEvent.builder()
-        .correlationId(refundPaymentCommand.getCorrelationId())
-        .transactionId(refundPaymentCommand.getTransactionId())
+        .correlationId(paymentCompensationEvent.getOrderId())
+        .transactionId(paymentCompensationEvent.getTransactionId())
         .success(true)
         .message("Payment refunded successfully")
         .build();
