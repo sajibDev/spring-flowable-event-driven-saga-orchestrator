@@ -122,10 +122,7 @@ class SagaAnalyzer:
         in_progress_sagas = [s for s in self.sagas.values() if s['status'] == 'IN_PROGRESS']
         success_count = len([s for s in completed_sagas if s['status'] == 'SUCCESS'])
         failed_count = len([s for s in completed_sagas if s['status'] == 'FAILED'])
-        # Count sagas with failed events (e.g., payment failures leading to compensation)
-        business_failures = len([s for s in completed_sagas if s.get('hasFailedEvents', False)])
-        in_progress_with_failures = len([s for s in in_progress_sagas if s.get('hasFailedEvents', False)])
-        in_progress = total_sagas - len(completed_sagas)
+        in_progress_count = len(in_progress_sagas)
         
         # Calculate duration statistics
         durations = [s['duration'] for s in completed_sagas if s['duration'] is not None]
@@ -140,12 +137,9 @@ class SagaAnalyzer:
         report.append("║" + "OVERALL STATISTICS".center(98) + "║")
         report.append("╠" + "─" * 98 + "╣")
         report.append(f"║  {'Total Sagas Tracked':<35} │ {total_sagas:>58} ║")
-        report.append(f"║  {'Completed Sagas':<35} │ {len(completed_sagas):>58} ║")
-        report.append(f"║  {'  - Successful':<35} │ {success_count:>50} ({(success_count*100/len(completed_sagas) if completed_sagas else 0):.1f}%) ║")
-        report.append(f"║  {'  - Failed (Orchestration)':<35} │ {failed_count:>50} ({(failed_count*100/len(completed_sagas) if completed_sagas else 0):.1f}%) ║")
-        report.append(f"║  {'  - Business Failures (Payment)':<35} │ {business_failures:>50} ({(business_failures*100/len(completed_sagas) if completed_sagas else 0):.1f}%) ║")
-        report.append(f"║  {'In Progress':<35} │ {in_progress:>58} ║")
-        report.append(f"║  {'  - With Failed Events':<35} │ {in_progress_with_failures:>50} ({(in_progress_with_failures*100/in_progress if in_progress else 0):.1f}%) ║")
+        report.append(f"║  {'Successful':<35} │ {success_count:>50} ({(success_count*100/total_sagas):.1f}%) ║")
+        report.append(f"║  {'Failed':<35} │ {failed_count:>50} ({(failed_count*100/total_sagas):.1f}%) ║")
+        report.append(f"║  {'In Progress':<35} │ {in_progress_count:>50} ({(in_progress_count*100/total_sagas):.1f}%) ║")
         report.append("╠" + "─" * 98 + "╣")
         report.append("")
         
