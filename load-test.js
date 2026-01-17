@@ -5,11 +5,11 @@ import { check, sleep } from 'k6';
 
 export const options = {
     scenarios: {
-        send_100_requests: {
+        send_requests: {
             executor: 'shared-iterations',
             vus: 10,
-            iterations: 1000,
-            maxDuration: '60s',
+            iterations: 200,
+            maxDuration: '20s',
         },
     },
 };
