@@ -54,7 +54,7 @@ public class InventoryService {
         return;
       }
 
-      Thread.sleep(500);
+      Thread.sleep(250);
 
       log.info("Completed reserving inventory. CorrelationId: {}, OrderId: {}",
           reserveInventoryCommand.getCorrelationId(), reserveInventoryCommand.getOrderId());
@@ -77,7 +77,7 @@ public class InventoryService {
         compensateInventoryCommand.getCorrelationId(), compensateInventoryCommand.getOrderId());
 
     try {
-      Thread.sleep(500);
+      Thread.sleep(250);
     } catch (InterruptedException e) {
       // Handle interruption
     }

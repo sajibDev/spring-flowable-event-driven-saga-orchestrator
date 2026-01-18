@@ -33,8 +33,8 @@ public class TemporalConfig {
         
         // Configure worker with proper options
         WorkerOptions workerOptions = WorkerOptions.newBuilder()
-                .setMaxConcurrentActivityExecutionSize(20)  // Allow up to 20 concurrent activities
-                .setMaxConcurrentWorkflowTaskExecutionSize(10)  // Allow up to 10 concurrent workflow tasks
+                .setMaxConcurrentActivityExecutionSize(200)  // Allow up to 20 concurrent activities
+                .setMaxConcurrentWorkflowTaskExecutionSize(100)  // Allow up to 10 concurrent workflow tasks
                 .build();
         
         Worker worker = factory.newWorker("ORDER_TASK_QUEUE", workerOptions);

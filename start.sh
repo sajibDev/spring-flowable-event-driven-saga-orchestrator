@@ -10,6 +10,11 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
+# Create logs directory with proper permissions for the container
+echo "📁 Creating logs directory with proper permissions..."
+mkdir -p ./logs/saga-orchestrator
+chmod 755 ./logs/saga-orchestrator
+
 echo "📦 Starting infrastructure services (PostgreSQL & RabbitMQ)..."
 docker-compose up -d
 

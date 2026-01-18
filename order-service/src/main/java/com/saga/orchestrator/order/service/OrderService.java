@@ -27,7 +27,7 @@ public class OrderService {
     log.info("Creating order. CorrelationId: {}", createOrderCommand.getCorrelationId());
 
     try {
-      Thread.sleep(500);
+      Thread.sleep(250);
       log.info("Created order successfully. CorrelationId: {}, OrderId: {}",
           createOrderCommand.getCorrelationId(), createOrderCommand.getCorrelationId());
 
@@ -62,7 +62,7 @@ public class OrderService {
     log.info("Cancelling order: {}", cancelOrderCommand.getCorrelationId());
 
     try {
-      Thread.sleep(500);
+      Thread.sleep(250);
     } catch (InterruptedException e) {
       // Handle interruption
     }

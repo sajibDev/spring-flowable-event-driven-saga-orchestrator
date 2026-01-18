@@ -36,7 +36,7 @@ public class ShippingService {
         try {
             String shipmentId = UUID.randomUUID().toString();
 
-            Thread.sleep(500);
+            Thread.sleep(250);
 
             // Simulate 20% failure rate for load testing
             boolean shouldFail = random.nextDouble() < failureRate;
@@ -79,7 +79,7 @@ public class ShippingService {
                 cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());
 
         try {
-            Thread.sleep(500);
+            Thread.sleep(250);
             log.info("Shipment cancelled successfully. CorrelationId: {}, OrderId: {}",
                     cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());
         } catch (InterruptedException e) {

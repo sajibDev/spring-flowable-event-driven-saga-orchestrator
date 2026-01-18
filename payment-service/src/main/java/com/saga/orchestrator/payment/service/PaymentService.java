@@ -68,7 +68,7 @@ public class PaymentService {
         return;
       }
 
-      Thread.sleep(500);
+      Thread.sleep(250);
 
       log.info("Payment processed successfully. CorrelationId: {}, OrderId: {}",
           processPaymentCommand.getCorrelationId(), processPaymentCommand.getOrderId());
@@ -91,7 +91,7 @@ public class PaymentService {
         refundPaymentCommand.getCorrelationId(), refundPaymentCommand.getOrderId());
 
     try {
-      Thread.sleep(500);
+      Thread.sleep(250);
     } catch (InterruptedException e) {
       // Handle interruption
     }

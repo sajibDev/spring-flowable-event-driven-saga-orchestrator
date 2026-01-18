@@ -17,11 +17,11 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '2.0'
+          memory: 2GB
+        reservations:
           cpus: '1.0'
           memory: 1GB
-        reservations:
-          cpus: '0.5'
-          memory: 512M
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -41,11 +41,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1GB
+          cpus: '4.0'
+          memory: 2GB
         reservations:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '4.0'
+          memory: 1GB
 
   temporal:
     image: temporalio/auto-setup:1.24.2
@@ -71,11 +71,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 1GB
+          cpus: '6.0'
+          memory: 4GB
         reservations:
-          cpus: '1.0'
-          memory: 512M
+          cpus: '4.0'
+          memory: 2GB
 
   temporal-ui:
 
@@ -231,10 +231,9 @@ services:
       args:
         SERVICE_NAME: saga-orchestrator
     container_name: saga-orchestrator
+    user: "1000:1000"
     ports:
       - "8085:8085"
-    volumes:
-      - ./logs/saga-orchestrator:/app/logs
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -253,11 +252,11 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '4.0'
+          memory: 2GB
+        reservations:
           cpus: '2.0'
           memory: 1GB
-        reservations:
-          cpus: '1.0'
-          memory: 512M
 
 networks:
   saga-network:

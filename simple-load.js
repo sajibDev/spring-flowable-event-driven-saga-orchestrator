@@ -7,11 +7,21 @@ export const options = {
     scenarios: {
         send_100_requests: {
             executor: 'shared-iterations',
-            vus: 10,
-            iterations: 100,
-            maxDuration: '10s',
+            vus: 50,
+            iterations: 500,
+            maxDuration: '60s',
         },
     },
+
+    // stages: [
+    //     { duration: '20s', target: 25 },    // Ramp up to 25 users
+    //     { duration: '40s', target: 50 }    // Ramp up to 50 users
+    //     // { duration: '1m', target: 100 },   // Ramp up to 100 users
+    //     // { duration: '3m', target: 150 },   // Ramp up to 150 users
+    //     // { duration: '5m', target: 150 },   // Hold at 150 users
+    //     // { duration: '2m', target: 75 },    // Ramp down to 75 users
+    //     // { duration: '30s', target: 0 },     // Ramp down to 0 users
+    // ]
 };
 
 // Test data - multiple order payloads to vary requests
