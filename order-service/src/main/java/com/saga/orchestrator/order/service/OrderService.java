@@ -16,6 +16,7 @@ import com.saga.orchestrator.common.events.OrderCreationFailedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -37,6 +38,7 @@ public class OrderService {
                     .success(true)
                     .message("Order created successfully")
                     .build();
+
 
             rabbitTemplate.convertAndSend(
                     ORDER_EXCHANGE,

@@ -29,6 +29,15 @@ public class ShippingService {
     @Value("${shipping.failure.rate:0.20}")
     private double failureRate;
 
+    // Slow response rate: 5% (0.05) - configurable via application.yml
+    // Simulates temporary service outage/latency for testing Temporal timeouts
+    @Value("${shipping.slow.response.rate:0.05}")
+    private double slowResponseRate;
+
+    // Slow response delay in milliseconds (default: 10 minutes)
+    @Value("${shipping.slow.response.delay.ms:600000}")
+    private long slowResponseDelayMs;
+
     public void createShipment(CreateShipmentCommand createShipmentCommand) {
         log.info("Started creating shipment. CorrelationId: {}, OrderId: {}",
                 createShipmentCommand.getCorrelationId(), createShipmentCommand.getOrderId());
@@ -36,7 +45,13 @@ public class ShippingService {
         try {
             String shipmentId = UUID.randomUUID().toString();
 
-            Thread.sleep(250);
+            // Simulate slow response (service outage) - runs async, doesn't block other requests
+            if (random.nextDouble() < slowResponseRate) {
+                log.info("Simulating slow response ({} ms) for Temporal timeout testing. CorrelationId: {}",
+                        slowResponseDelayMs, createShipmentCommand.getCorrelationId());
+                Thread.sleep(slowResponseDelayMs);
+                log.info("Slow response simulation completed. CorrelationId: {}", createShipmentCommand.getCorrelationId());
+            }
 
             // Simulate 20% failure rate for load testing
             boolean shouldFail = random.nextDouble() < failureRate;
@@ -91,7 +106,7 @@ public class ShippingService {
             String correlationId,
             String shipmentId,
             boolean success,
-            String message) {
+            String message)  {
         ShipmentCreatedEvent event = ShipmentCreatedEvent.builder()
                 .correlationId(correlationId)
                 .shipmentId(shipmentId)

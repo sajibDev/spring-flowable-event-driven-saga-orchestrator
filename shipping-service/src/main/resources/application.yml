@@ -19,4 +19,9 @@ logging:
 shipping:
   failure:
     rate: 0.20
+  slow:
+    response:
+      rate: 0.05
+      delay:
+        ms: 600000
 

@@ -72,6 +72,9 @@ public class RabbitMQConfig {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(jsonMessageConverter());
+        // CRITICAL: Set prefetch to 1 so each consumer only takes 1 message at a time
+        // This prevents one slow consumer from blocking all other messages in the queue
+        factory.setPrefetchCount(1);
         return factory;
     }
 }

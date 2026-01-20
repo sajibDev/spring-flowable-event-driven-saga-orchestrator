@@ -15,14 +15,14 @@ public class ShippingEventListener {
 
   private final ShippingService shippingService;
 
-  @RabbitListener(queues = RabbitMQConstants.SHIPPING_CREATE_COMMAND_QUEUE)
+  @RabbitListener(queues = RabbitMQConstants.SHIPPING_CREATE_COMMAND_QUEUE, concurrency = "10-50")
   public void handleShippingCreate(CreateShipmentCommand createShipmentCommand) {
     log.info("Received create shipping command. CorrelationId: {}, OrderId: {}",
         createShipmentCommand.getCorrelationId(), createShipmentCommand.getOrderId());
     shippingService.createShipment(createShipmentCommand);
   }
 
-  @RabbitListener(queues = RabbitMQConstants.SHIPPING_CANCEL_COMMAND_QUEUE)
+  @RabbitListener(queues = RabbitMQConstants.SHIPPING_CANCEL_COMMAND_QUEUE, concurrency = "5-20")
   public void handleShippingCancel(CancelShipmentCommand cancelShipmentCommand) {
     log.info("Received cancel shipping command. CorrelationId: {}, OrderId: {}",
         cancelShipmentCommand.getCorrelationId(), cancelShipmentCommand.getOrderId());

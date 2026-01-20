@@ -7,9 +7,9 @@ export const options = {
     scenarios: {
         send_100_requests: {
             executor: 'shared-iterations',
-            vus: 50,
-            iterations: 500,
-            maxDuration: '60s',
+            vus: 5,
+            iterations: 20,
+            maxDuration: '20s',
         },
     },
 

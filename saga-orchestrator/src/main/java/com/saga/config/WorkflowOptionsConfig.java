@@ -37,7 +37,7 @@ public class WorkflowOptionsConfig {
             .build();
     
     // Signal wait timeout - how long to wait for external signals
-    public static final Duration SIGNAL_WAIT_TIMEOUT = Duration.ofMinutes(5);
+    public static final Duration SIGNAL_WAIT_TIMEOUT = Duration.ofMinutes(30);
     
     /**
      * Default activity options for standard operations (publishing events).

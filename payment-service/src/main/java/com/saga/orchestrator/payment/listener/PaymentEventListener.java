@@ -15,14 +15,14 @@ public class PaymentEventListener {
 
   private final PaymentService paymentService;
 
-  @RabbitListener(queues = RabbitMQConstants.PAYMENT_PROCESS_COMMAND_QUEUE)
+  @RabbitListener(queues = RabbitMQConstants.PAYMENT_PROCESS_COMMAND_QUEUE, concurrency = "10-50")
   public void handlePaymentProcess(ProcessPaymentCommand processPaymentCommand) {
     log.info("Received payment process request. CorrelationId: {}, OrderId: {}",
         processPaymentCommand.getCorrelationId(), processPaymentCommand.getOrderId());
     paymentService.processPayment(processPaymentCommand);
   }
 
-  @RabbitListener(queues = RabbitMQConstants.PAYMENT_REFUND_COMMAND_QUEUE)
+  @RabbitListener(queues = RabbitMQConstants.PAYMENT_REFUND_COMMAND_QUEUE, concurrency = "5-20")
   public void handlePaymentRefund(RefundPaymentCommand refundPaymentCommand) {
     log.info("Received payment refund request. CorrelationId: {}, OrderId: {}",
         refundPaymentCommand.getCorrelationId(), refundPaymentCommand.getOrderId());

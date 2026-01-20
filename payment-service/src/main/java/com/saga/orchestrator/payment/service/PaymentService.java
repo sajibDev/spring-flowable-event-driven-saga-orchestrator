@@ -30,12 +30,28 @@ public class PaymentService {
   @Value("${payment.failure.rate:0.10}")
   private double failureRate;
 
+    // Slow response rate: 5% (0.05) - configurable via application.yml
+    // Simulates temporary service outage/latency for testing Temporal timeouts
+    @Value("${payment.slow.response.rate:0.05}")
+    private double slowResponseRate;
+
+    // Slow response delay in milliseconds (default: 10 minutes)
+    @Value("${payment.slow.response.delay.ms:600000}")
+    private long slowResponseDelayMs;
+
   public void processPayment(ProcessPaymentCommand processPaymentCommand) {
     log.info("Started processing payment. CorrelationId: {}, OrderId: {}",
         processPaymentCommand.getCorrelationId(), processPaymentCommand.getOrderId());
 
     try {
       String transactionId = UUID.randomUUID().toString();
+
+        if (random.nextDouble() < slowResponseRate) {
+            log.info("Simulating slow response ({} ms) for Temporal timeout testing. CorrelationId: {}",
+                    slowResponseDelayMs, processPaymentCommand.getCorrelationId());
+            Thread.sleep(slowResponseDelayMs);
+            log.info("Slow response simulation completed. CorrelationId: {}", processPaymentCommand.getCorrelationId());
+        }
 
       // Simulate 10% failure rate for load testing
       boolean shouldFail = random.nextDouble() < failureRate;
@@ -79,8 +95,7 @@ public class PaymentService {
           true,
           "Payment processed successfully");
     } catch (Exception e) {
-      log.error("Error processing payment for order: {}", processPaymentCommand.getCorrelationId(),
-          e);
+      log.error("Error processing payment for order: {}", processPaymentCommand.getCorrelationId(), e);
       publishPaymentProcessedEvent(processPaymentCommand.getCorrelationId(), null, false,
           "Error processing payment: " + e.getMessage());
     }
@@ -109,7 +124,7 @@ public class PaymentService {
         paymentProcessedEvent);
   }
 
-  private boolean processPaymentGateway(String customerId, java.math.BigDecimal amount) {
+  private boolean processPaymentGateway(String customerId, java.math.BigDecimal amount)  {
     return true;
   }
 
