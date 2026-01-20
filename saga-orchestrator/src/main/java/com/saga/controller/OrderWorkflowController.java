@@ -2,6 +2,7 @@ package com.saga.controller;
 
 import com.saga.OrderWorkflow;
 import com.saga.config.WorkflowOptionsConfig;
+import com.saga.constant.Constants;
 import com.saga.dto.CreateOrderRequest;
 import com.saga.logging.WorkflowTimestampLogger;
 import io.temporal.api.common.v1.WorkflowExecution;
@@ -65,26 +66,25 @@ public class OrderWorkflowController {
                     workflowId, execution.getWorkflowId());
 
             Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("workflowId", workflowId);
-            response.put("executionId", execution.getWorkflowId());
-            response.put("message", "Workflow started successfully");
+            response.put(Constants.STATUS, "success");
+            response.put(Constants.WORKFLOW_ID, workflowId);
+            response.put(Constants.MESSAGE, "Workflow started successfully");
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 
         } catch (WorkflowExecutionAlreadyStarted e) {
             // This is expected if the event is replayed - handle gracefully
             logger.warn("Workflow already started for order: {} (duplicate ORDER_CREATED event)", workflowId);
             Map<String, Object> response = new HashMap<>();
-            response.put("status", "duplicate");
-            response.put("workflowId", workflowId);
-            response.put("message", "Workflow already started for this order");
+            response.put(Constants.STATUS, "duplicate");
+            response.put(Constants.WORKFLOW_ID, workflowId);
+            response.put(Constants.MESSAGE, "Workflow already started for this order");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
 
         } catch (Exception e) {
             logger.error("Failed to start workflow for order: {}", workflowId, e);
             Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", "Failed to start workflow: " + e.getMessage());
+            response.put(Constants.STATUS, "error");
+            response.put(Constants.MESSAGE, "Failed to start workflow: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 

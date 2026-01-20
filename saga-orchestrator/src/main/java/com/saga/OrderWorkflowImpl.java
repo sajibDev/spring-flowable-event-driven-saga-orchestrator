@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 
 /**
  * Order Workflow Implementation following Temporal best practices.
- * 
+ * <p>
  * Key improvements:
  * 1. Uses Activities for all side effects (Kafka publishing)
  * 2. Keeps Signals for external events (durable, event-driven)
@@ -27,21 +27,21 @@ import org.slf4j.Logger;
  * 6. Proper error handling with custom exceptions
  */
 public class OrderWorkflowImpl implements OrderWorkflow {
-    
+
     private static final Logger logger = Workflow.getLogger(OrderWorkflowImpl.class);
-    
+
     // Activity stub with proper retry and timeout configuration
     private final OrderActivities activities = Workflow.newActivityStub(
-        OrderActivities.class,
-        WorkflowOptionsConfig.getDefaultActivityOptions()
+            OrderActivities.class,
+            WorkflowOptionsConfig.getDefaultActivityOptions()
     );
-    
+
     // Activity stub for compensations with more aggressive retry policy
     private final OrderActivities compensationActivities = Workflow.newActivityStub(
-        OrderActivities.class,
-        WorkflowOptionsConfig.getCompensationActivityOptions()
+            OrderActivities.class,
+            WorkflowOptionsConfig.getCompensationActivityOptions()
     );
-    
+
     // Promises for signal-based coordination (event-driven pattern)
     private final CompletablePromise<Void> orderCompleted = Workflow.newPromise();
     private final CompletablePromise<Void> orderFailed = Workflow.newPromise();
@@ -51,7 +51,7 @@ public class OrderWorkflowImpl implements OrderWorkflow {
     private final CompletablePromise<Void> inventoryFailed = Workflow.newPromise();
     private final CompletablePromise<Void> shippingCompleted = Workflow.newPromise();
     private final CompletablePromise<Void> shippingFailed = Workflow.newPromise();
-    
+
     // Workflow state for queries
     private final OrderWorkflowState state = new OrderWorkflowState();
 
@@ -60,11 +60,11 @@ public class OrderWorkflowImpl implements OrderWorkflow {
         logger.info("Starting order workflow for order: {}", orderId);
         state.setOrderId(orderId);
         state.setStatus(OrderStatus.PROCESSING);
-        
+
         // Configure saga for compensation handling
         Saga.Options sagaOptions = new Saga.Options.Builder()
-            .setContinueWithError(false)
-            .build();
+                .setContinueWithError(false)
+                .build();
         Saga saga = new Saga(sagaOptions);
 
         try {
@@ -75,7 +75,6 @@ public class OrderWorkflowImpl implements OrderWorkflow {
             //activites to publish order request
 
             activities.publishOrderCreatedEvent(orderId);
-
             //Register compensation for order
             saga.addCompensation(() -> compensationActivities.compensateOrder(orderId));
 
@@ -104,6 +103,8 @@ public class OrderWorkflowImpl implements OrderWorkflow {
 
             // Use Activity to publish inventory request
             activities.publishInventoryRequest(orderId);
+            // Register compensation for inventory (after success)
+            saga.addCompensation(() -> compensationActivities.compensateInventory(orderId));
 
             // Wait for signal with timeout
             boolean inventoryReceived = Workflow.await(
@@ -128,28 +129,26 @@ public class OrderWorkflowImpl implements OrderWorkflow {
             logger.info("Inventory reserved for order: {}", orderId);
             state.addCompletedStep(WorkflowStep.INVENTORY);
 
-            // Register compensation for inventory (after success)
-            saga.addCompensation(() -> compensationActivities.compensateInventory(orderId));
-
             // ===== Payment STEP =====
             state.setCurrentStep(WorkflowStep.PAYMENT);
+            logger.info("Processing payment for order: {}", orderId);
+
             // Use Activity to publish payment request (deterministic)
             activities.publishPaymentRequest(orderId);
-            
             // Register compensation for payment
             saga.addCompensation(() -> compensationActivities.compensatePayment(orderId));
-            
+
             // Wait for signal with timeout (event-driven + resilient)
             boolean paymentReceived = Workflow.await(
-                WorkflowOptionsConfig.SIGNAL_WAIT_TIMEOUT,
-                () -> paymentCompleted.isCompleted() || paymentFailed.isCompleted()
+                    WorkflowOptionsConfig.SIGNAL_WAIT_TIMEOUT,
+                    () -> paymentCompleted.isCompleted() || paymentFailed.isCompleted()
             );
-            
+
             if (!paymentReceived) {
                 logger.error("Payment timeout for order: {}", orderId);
                 throw new PaymentFailedException(orderId, "Payment processing timeout");
             }
-            
+
             if (paymentFailed.isCompleted()) {
                 logger.warn("Payment failed for order: {}, no compensation needed", orderId);
                 state.setStatus(OrderStatus.COMPENSATING);
@@ -158,29 +157,30 @@ public class OrderWorkflowImpl implements OrderWorkflow {
                 state.setStatus(OrderStatus.COMPENSATED);
                 return;
             }
-            
+
             logger.info("Payment completed for order: {}", orderId);
             state.addCompletedStep(WorkflowStep.PAYMENT);
 
             // ===== SHIPPING STEP =====
             state.setCurrentStep(WorkflowStep.SHIPPING);
             logger.info("Processing shipping for order: {}", orderId);
-            
+
             // Use Activity to publish shipping request
             activities.publishShippingRequest(orderId);
-
+            // Register compensation for shipping
             saga.addCompensation(() -> compensationActivities.compensateShipping(orderId));
+
             // Wait for signal with timeout
             boolean shippingReceived = Workflow.await(
-                WorkflowOptionsConfig.SIGNAL_WAIT_TIMEOUT,
-                () -> shippingCompleted.isCompleted() || shippingFailed.isCompleted()
+                    WorkflowOptionsConfig.SIGNAL_WAIT_TIMEOUT,
+                    () -> shippingCompleted.isCompleted() || shippingFailed.isCompleted()
             );
-            
+
             if (!shippingReceived) {
                 logger.error("Shipping timeout for order: {}", orderId);
                 throw new ShippingFailedException(orderId, "Shipping processing timeout");
             }
-            
+
             if (shippingFailed.isCompleted()) {
                 logger.warn("Shipping failed for order: {}, compensating inventory and payment", orderId);
                 state.setStatus(OrderStatus.COMPENSATING);
@@ -189,14 +189,14 @@ public class OrderWorkflowImpl implements OrderWorkflow {
                 state.setStatus(OrderStatus.COMPENSATED);
                 return;
             }
-            
+
             logger.info("Shipping completed for order: {}", orderId);
             state.addCompletedStep(WorkflowStep.SHIPPING);
-            
+
             // ===== ORDER COMPLETED =====
             state.setStatus(OrderStatus.COMPLETED);
             logger.info("Order workflow completed successfully for order: {}", orderId);
-            
+
         } catch (PaymentFailedException | InventoryFailedException | ShippingFailedException e) {
             // Business failures - compensate if needed
             logger.error("Order workflow failed for order {}: {}", orderId, e.getMessage());
@@ -204,7 +204,7 @@ public class OrderWorkflowImpl implements OrderWorkflow {
             state.setFailureReason(e.getReason());
             saga.compensate();
             state.setStatus(OrderStatus.COMPENSATED);
-            
+
         } catch (Exception e) {
             // Unexpected failures
             logger.error("Unexpected error in order workflow for order: {}", orderId, e);
@@ -229,7 +229,7 @@ public class OrderWorkflowImpl implements OrderWorkflow {
     }
 
     // ===== SIGNAL METHODS (Event-driven pattern) =====
-    
+
     @Override
     public void onPaymentCompleted() {
         logger.info("Signal received: Payment completed");
@@ -265,14 +265,14 @@ public class OrderWorkflowImpl implements OrderWorkflow {
         logger.warn("Signal received: Shipping failed");
         shippingFailed.complete(null);
     }
-    
+
     // ===== QUERY METHODS (Read-only state inspection) =====
-    
+
     @Override
     public OrderWorkflowState getState() {
         return state;
     }
-    
+
     @Override
     public String getStatus() {
         return state.getStatus().toString();
