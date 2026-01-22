@@ -1,6 +1,10 @@
 package com.saga;
 
 import com.saga.dto.CreateOrderRequest;
+import com.saga.dto.InventoryResponse;
+import com.saga.dto.OrderResponse;
+import com.saga.dto.PaymentResponse;
+import com.saga.dto.ShippingResponse;
 import com.saga.model.OrderWorkflowState;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
@@ -11,8 +15,8 @@ import io.temporal.workflow.QueryMethod;
  * Order Workflow Interface following Temporal best practices.
  * 
  * Uses hybrid pattern:
- * - Activities: For outbound actions (publishing to Kafka)
- * - Signals: For inbound events (service responses) 
+ * - Activities: For outbound actions (publishing to RabbitMQ)
+ * - Signals: For inbound events (service responses)
  * - Queries: For status checking without affecting workflow execution
  */
 @WorkflowInterface
@@ -20,39 +24,44 @@ public interface OrderWorkflow {
 
     /**
      * Main workflow method to place an order.
-     * Coordinates the saga across payment, inventory, and shipping services.
-     * 
+     * Coordinates the saga across order, inventory, payment, and shipping services.
+     *
      * @param orderId The unique order identifier
+     * @param orderRequest The order request details
      */
     @WorkflowMethod
     void placeOrder(String orderId, CreateOrderRequest orderRequest);
 
     // Signal methods for external events from services
 
+    /**
+     * Signal method to receive order creation response.
+     * @param orderResponse The order service response
+     */
     @SignalMethod
-    void onOrderCreated();
+    void orderReply(OrderResponse orderResponse);
 
+    /**
+     * Signal method to receive inventory reservation response.
+     * @param inventoryResponse The inventory service response
+     */
     @SignalMethod
-    void onOrderFailed();
+    void inventoryReply(InventoryResponse inventoryResponse);
 
+    /**
+     * Signal method to receive payment processing response.
+     * @param paymentResponse The payment service response
+     */
     @SignalMethod
-    void onPaymentCompleted();
+    void paymentReply(PaymentResponse paymentResponse);
 
+    /**
+     * Signal method to receive shipping creation response.
+     * @param shippingResponse The shipping service response
+     */
     @SignalMethod
-    void onPaymentFailed();
+    void shippingReply(ShippingResponse shippingResponse);
 
-    @SignalMethod
-    void onInventoryReserved();
-
-    @SignalMethod
-    void onInventoryFailed();
-
-    @SignalMethod
-    void onShippingCompleted();
-
-    @SignalMethod
-    void onShippingFailed();
-    
     // Query methods for workflow state inspection
     
     /**

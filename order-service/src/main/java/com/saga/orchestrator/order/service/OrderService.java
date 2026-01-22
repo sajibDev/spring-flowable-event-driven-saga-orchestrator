@@ -1,20 +1,16 @@
 package com.saga.orchestrator.order.service;
 
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_CANCELLED_ROUTING_KEY;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_CREATED_ROUTING_KEY;
-import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXCHANGE;
-
+import com.saga.orchestrator.common.events.CancelOrderCommand;
+import com.saga.orchestrator.common.events.CreateOrderCommand;
+import com.saga.orchestrator.common.events.OrderCreatedEvent;
+import com.saga.orchestrator.common.events.OrderCreationFailedEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
-import com.saga.orchestrator.common.events.CancelOrderCommand;
-import com.saga.orchestrator.common.events.CreateOrderCommand;
-import com.saga.orchestrator.common.events.OrderCancelledEvent;
-import com.saga.orchestrator.common.events.OrderCreatedEvent;
-import com.saga.orchestrator.common.events.OrderCreationFailedEvent;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_CREATED_ROUTING_KEY;
+import static com.saga.orchestrator.common.constants.RabbitMQConstants.ORDER_EXCHANGE;
 
 
 @Slf4j
@@ -69,16 +65,6 @@ public class OrderService {
             // Handle interruption
         }
 
-        OrderCancelledEvent event = OrderCancelledEvent.builder()
-                .correlationId(cancelOrderCommand.getCorrelationId())
-                .orderId(cancelOrderCommand.getOrderId())
-                .reason(cancelOrderCommand.getReason())
-                .success(false)
-                .build();
-
-        rabbitTemplate.convertAndSend(
-                ORDER_EXCHANGE,
-                ORDER_CANCELLED_ROUTING_KEY,
-                event);
+        log.info("Cancelled order: {}", cancelOrderCommand.getCorrelationId());
     }
 }
